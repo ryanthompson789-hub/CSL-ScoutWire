@@ -183,45 +183,55 @@ with tab1:
         others['Similarity'] = others.apply(lambda row: sum((target_vector - row[match_traits].values) ** 2) ** 0.5, axis=1)
         similar_players = others.sort_values('Similarity').head(3)
 
-   # --- TOP UI: HEADER & SUMMARY ---
+    # --- TOP UI: HEADER & SUMMARY ---
     st.markdown(f"## {selected_player} | Class of {p_data.get(year_col, 'N/A')}")
     
-    # --- POSITION RELATIVE LOGIC ---
-    # Filter class to same position only
+    # --- RANKING LOGIC (Position & Class-Wide) ---
     pos_peers = filtered_stats[filtered_stats['Pos'] == p_data['Pos']].copy()
     total_in_pos = len(pos_peers)
+    total_in_class = len(filtered_stats)
     
-    # Calculate Ranks (1 is best)
-    def get_pos_rank(stat_name):
-        ranks = pos_peers[stat_name].rank(ascending=False, method='min')
-        player_idx = list(pos_peers['Full_Name']).index(selected_player)
-        return int(ranks.iloc[player_idx])
+    def get_ranks(stat_name):
+        # Position Rank
+        pos_ranks = pos_peers[stat_name].rank(ascending=False, method='min')
+        p_idx = list(pos_peers['Full_Name']).index(selected_player)
+        p_rank = int(pos_ranks.iloc[p_idx])
+        
+        # Class-Wide Rank
+        class_ranks = filtered_stats[stat_name].rank(ascending=False, method='min')
+        c_idx = list(filtered_stats['Full_Name']).index(selected_player)
+        c_rank = int(class_ranks.iloc[c_idx])
+        
+        return p_rank, c_rank
 
-    # Calculate Position Averages for context
-    pos_avg_pot = pos_peers['Overall_Pot'].mean()
+    # Display the Context Header
+    st.subheader(f"📍 Scouting Intelligence")
+    st.caption(f"Comparing to **{total_in_pos}** {p_data['Pos']}s and **{total_in_class}** total prospects in the {selected_year} class.")
+    
+    # ROW 1: Overall, SCR, PAS, HDL, ORB
+    r1_1, r1_2, r1_3, r1_4, r1_5 = st.columns(5)
+    
+    # ROW 2: DRB, DEF, STL, BLK, IQ
+    r2_1, r2_2, r2_3, r2_4, r2_5 = st.columns(5)
 
-    # Display the Relative Context with explicit detail
-    st.subheader(f"📍 Positional Peer Review")
-    st.markdown(f"**Comparison Group:** All {total_in_pos} players listed at **{p_data['Pos']}** in the {selected_year} class.")
-    
-    # Create the Ranking Dashboard
-    r_col1, r_col2, r_col3, r_col4 = st.columns(4)
-    
-    with r_col1:
-        st.metric("Ceiling Rank", f"#{get_pos_rank('Overall_Pot')}", f"{p_data['Overall_Pot'] - pos_avg_pot:.1f} vs Avg")
-    with r_col2:
-        st.metric("Scoring Rank", f"#{get_pos_rank('SCR')}")
-    with r_col3:
-        st.metric("Defense Rank", f"#{get_pos_rank('DEF')}")
-    with r_col4:
-        st.metric("IQ Rank", f"#{get_pos_rank('IQ')}")
+    stats_to_rank = [
+        ('Overall_Pot', 'Ceiling', r1_1), ('SCR', 'Scoring', r1_2), 
+        ('PAS', 'Passing', r1_3), ('HDL', 'Handling', r1_4), 
+        ('ORB', 'Off. Reb', r1_5), ('DRB', 'Def. Reb', r2_1), 
+        ('DEF', 'Defense', r2_2), ('STL', 'Steals', r2_3), 
+        ('BLK', 'Blocks', r2_4), ('IQ', 'IQ', r2_5)
+    ]
+
+    for stat_key, label, col in stats_to_rank:
+        p_rank, c_rank = get_ranks(stat_key)
+        col.metric(label, f"#{p_rank}", f"#{c_rank} OVR", delta_color="off")
 
     st.divider()
 
     with st.expander("📝 Scouting Director's Executive Summary", expanded=True):
         st.write(generate_scout_report(p_data, filtered_stats))
 
-    # Bio Metrics (c1-c5)
+    # Bio Metrics
     c1, c2, c3, c4, c5 = st.columns(5)
     if 'Pos' in p_data: c1.metric("Position", p_data['Pos'])
     if 'AGE' in p_data: c2.metric("Age", str(int(float(p_data['AGE']))))
@@ -387,6 +397,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
 
