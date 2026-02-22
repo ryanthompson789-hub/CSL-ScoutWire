@@ -22,10 +22,20 @@ if not uploaded_files:
 
 # --- DATA PROCESSING ---
 try:
+    # 1. Combine all uploaded CSVs into one dataframe
     df_list = [pd.read_csv(file) for file in uploaded_files]
     df = pd.concat(df_list)
+    
+    # 2. THE SANITY FILTER (Put it right here!)
+    # We remove any row where DRFL is > 25. 
+    # This cleans the data BEFORE we calculate averages for Janes or others.
+    if 'DRFL' in df.columns:
+        df = df[df['DRFL'] <= 25]
+
+    # 3. Define the Full Name (using the cleaned data)
     df['Full_Name'] = df['First'].astype(str) + " " + df['Last'].astype(str)
     
+    # 4. Standardize Column Names
     rename_map = {
         'POS': 'Pos', 'Pos': 'Pos',
         'AGE': 'AGE', 'Age': 'AGE',
@@ -365,4 +375,5 @@ with tab3:
     fig_risk.update_traces(textposition='top center')
     st.plotly_chart(fig_risk, use_container_width=True)
     
+
     st.info(f"💡 **How to read this:** Players in the **Top-Left** (like Janes) have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
