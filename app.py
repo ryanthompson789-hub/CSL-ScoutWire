@@ -183,7 +183,7 @@ with tab1:
         others['Similarity'] = others.apply(lambda row: sum((target_vector - row[match_traits].values) ** 2) ** 0.5, axis=1)
         similar_players = others.sort_values('Similarity').head(3)
 
-    # --- TOP UI: HEADER & SUMMARY ---
+   # --- TOP UI: HEADER & SUMMARY ---
     st.markdown(f"## {selected_player} | Class of {p_data.get(year_col, 'N/A')}")
     
     # --- RANKING LOGIC (Position & Class-Wide) ---
@@ -196,35 +196,52 @@ with tab1:
         pos_ranks = pos_peers[stat_name].rank(ascending=False, method='min')
         p_idx = list(pos_peers['Full_Name']).index(selected_player)
         p_rank = int(pos_ranks.iloc[p_idx])
-        
         # Class-Wide Rank
         class_ranks = filtered_stats[stat_name].rank(ascending=False, method='min')
         c_idx = list(filtered_stats['Full_Name']).index(selected_player)
         c_rank = int(class_ranks.iloc[c_idx])
-        
         return p_rank, c_rank
 
-    # Display the Context Header
     st.subheader(f"📍 Scouting Intelligence")
     st.caption(f"Comparing to **{total_in_pos}** {p_data['Pos']}s and **{total_in_class}** total prospects in the {selected_year} class.")
-    
-    # ROW 1: Overall, SCR, PAS, HDL, ORB
-    r1_1, r1_2, r1_3, r1_4, r1_5 = st.columns(5)
-    
-    # ROW 2: DRB, DEF, STL, BLK, IQ
-    r2_1, r2_2, r2_3, r2_4, r2_5 = st.columns(5)
 
-    stats_to_rank = [
-        ('Overall_Pot', 'Ceiling', r1_1), ('SCR', 'Scoring', r1_2), 
-        ('PAS', 'Passing', r1_3), ('HDL', 'Handling', r1_4), 
-        ('ORB', 'Off. Reb', r1_5), ('DRB', 'Def. Reb', r2_1), 
-        ('DEF', 'Defense', r2_2), ('STL', 'Steals', r2_3), 
-        ('BLK', 'Blocks', r2_4), ('IQ', 'IQ', r2_5)
-    ]
+    # Create toggle for Current vs Potential
+    intel_tab_cur, intel_tab_pot = st.tabs(["📊 Current Ability Ranks", "🚀 Future Potential Ranks"])
 
-    for stat_key, label, col in stats_to_rank:
-        p_rank, c_rank = get_ranks(stat_key)
-        col.metric(label, f"#{p_rank}", f"#{c_rank} OVR", delta_color="off")
+    # Define the Stat Groups
+    core_keys = ['SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'DEF', 'STL', 'BLK', 'IQ']
+    shoot_keys = ['FG_RA', 'FG_ITP', 'FG_MID', 'FG_COR', 'FG_ATB', 'FT']
+    
+    for intel_tab, suffix in [(intel_tab_cur, ""), (intel_tab_pot, "_POT")]:
+        with intel_tab:
+            # Special Row for Overall Ceiling/Readiness
+            m1, m2 = st.columns(2)
+            if suffix == "":
+                p_r, c_r = get_ranks('Current_Rating')
+                m1.metric("Overall Readiness", f"#{p_r} in Pos", f"#{c_r} Overall", delta_color="off")
+            else:
+                p_r, c_r = get_ranks('Overall_Pot')
+                m1.metric("Overall Ceiling", f"#{p_r} in Pos", f"#{c_r} Overall", delta_color="off")
+
+            st.write("---")
+            # Core Stats Row
+            st.write("**Core Skills**")
+            cols = st.columns(len(core_keys))
+            for i, key in enumerate(core_keys):
+                stat_key = key + suffix
+                if stat_key in p_data:
+                    p_r, c_r = get_ranks(stat_key)
+                    cols[i].metric(key, f"#{p_r}", f"#{c_r} OVR", delta_color="off")
+
+            # Shooting Stats Row
+            st.write("**Shooting Profile**")
+            cols_s = st.columns(len(shoot_keys))
+            for i, key in enumerate(shoot_keys):
+                stat_key = key + suffix
+                if stat_key in p_data:
+                    p_r, c_r = get_ranks(stat_key)
+                    label = key.replace("FG_", "")
+                    cols_s[i].metric(label, f"#{p_r}", f"#{c_r} OVR", delta_color="off")
 
     st.divider()
 
@@ -397,6 +414,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
 
