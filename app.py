@@ -159,13 +159,13 @@ elif player.get('ORB', 0) >= 70 or player.get('BLK', 0) >= 55:
 if player.get('SCR', 0) >= 70 and player.get('DEF', 0) >= 70:
     archetype = "Elite Two-Way Threat"
 
-        # Analyze Play Style (Floor Habits)
-        habits = []
-        if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses")
-        if player.get('CS', 0) > 10: habits.append("finding space as a catch-and-shoot threat")
-        if player.get('PostUp', 0) > 8: habits.append("using their size in the low post")
+# Analyze Play Style (Floor Habits)
+habits = []
+if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses")
+if player.get('CS', 0) > 10: habits.append("finding space as a catch-and-shoot threat")
+if player.get('PostUp', 0) > 8: habits.append("using their size in the low post")
         
-        habit_str = f" often seen {habits[0]}" if habits else " playing within the flow of the offense"
+habit_str = f" often seen {habits[0]}" if habits else " playing within the flow of the offense"
 
         # Shooting Profile specificity
         shot_note = ""
@@ -389,5 +389,6 @@ with tab3:
     
 
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
