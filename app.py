@@ -26,13 +26,11 @@ try:
     df_list = [pd.read_csv(file) for file in uploaded_files]
     df = pd.concat(df_list)
     
-    # 2. THE SANITY FILTER (Put it right here!)
-    # We remove any row where DRFL is > 25. 
-    # This cleans the data BEFORE we calculate averages for Janes or others.
+    # 2. THE SANITY FILTER
     if 'DRFL' in df.columns:
         df = df[df['DRFL'] <= 25]
 
-    # 3. Define the Full Name (using the cleaned data)
+    # 3. Define the Full Name
     df['Full_Name'] = df['First'].astype(str) + " " + df['Last'].astype(str)
     
     # 4. Standardize Column Names
@@ -48,13 +46,13 @@ try:
     year_col = 'YEAR' 
     bio_cols = ['Pos', 'AGE', 'HT', 'WT', 'FROM']
     
-    # 1. Stats used for GRAPHING (The full visual picture)
+    # 1. Stats used for GRAPHING
     core_stats = ['SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 'DIS', 'IQ', 'DRFL']
     
-    # 2. Stats used for CALCULATING Ratings (Removing the "noise" stats)
+    # 2. Stats used for CALCULATING Ratings
     calc_stats = ['SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 'IQ']
     
-    # Generate potential versions for both
+    # Generate potential versions
     pot_stats = [s + '_POT' for s in core_stats]
     calc_pot = [s + '_POT' for s in calc_stats]
     
@@ -77,7 +75,6 @@ try:
         player_stats[year_col] = player_stats[year_col].astype(str).str.replace('.0', '', regex=False)
     
     # --- THE KEY CALCULATIONS ---
-    # We use calc_stats/calc_pot here so DIS and DRFL don't drag down the average
     player_stats['Current_Rating'] = player_stats[calc_stats].mean(axis=1)
     player_stats['Overall_Pot'] = player_stats[calc_pot].mean(axis=1)
     player_stats['Growth_Score'] = player_stats['Overall_Pot'] - player_stats['Current_Rating']
@@ -100,24 +97,19 @@ st.sidebar.header(f"🚀 Top Growth ({selected_year})")
 project_board = filtered_stats.sort_values(by='Growth_Score', ascending=False).head(5)
 
 for i, row in project_board.iterrows():
-    # Clicking this button updates the session state
     if st.sidebar.button(f"{row['Full_Name']} (+{row['Growth_Score']:.1f})", key=f"side_{row['Full_Name']}"):
         st.session_state.selected_player = row['Full_Name']
-        st.rerun() # This forces the app to refresh and jump to the new player
+        st.rerun()
 
 # --- TABBED NAVIGATION ---
 tab1, tab2, tab3 = st.tabs(["👤 Individual Prospect Scout", "📋 Draft Big Board", "📈 Strategy & Analysis"])
 
 with tab1:
-    # 1. Player Selection logic
     player_list = list(filtered_stats['Full_Name'].unique())
-
-    # Check if a player was clicked in the sidebar via session state
     default_index = 0
     if st.session_state.get('selected_player') in player_list:
         default_index = player_list.index(st.session_state.selected_player)
 
-    # The selectbox will now "jump" to the player clicked in the sidebar
     selected_player = st.selectbox(
         "Select Primary Prospect", 
         player_list, 
@@ -125,47 +117,37 @@ with tab1:
         key="main_player_selector"
     )
 
-    # Now load the data for the selected player
     p_data = filtered_stats[filtered_stats['Full_Name'] == selected_player].iloc[0]
 
     # --- ADVANCED SCOUTING REPORT FUNCTION ---
     def generate_scout_report(player, df_context):
         avg = df_context.mean(numeric_only=True)
         
-        # Identify "Signature" Traits (Stats significantly above average)
         high_traits = [stat for stat in ['SCR', 'DEF', 'PAS', 'IQ', 'BLK', 'STL', 'ORB'] 
                        if stat in player and player[stat] > avg[stat] + 8]
         
-# Determine Archetype based on absolute thresholds
-archetype = "Well-Rounded Prospect"
+        # Determine Archetype based on absolute thresholds
+        archetype = "Well-Rounded Prospect"
 
-# 1. Dynamic Perimeter Scorer (High Scoring + 3pt shooting ability)
-if player.get('SCR', 0) >= 70 and player.get('FG_ATB', 0) > 38:
-    archetype = "Dynamic Perimeter Scorer"
+        if player.get('SCR', 0) >= 70 and player.get('FG_ATB', 0) > 38:
+            archetype = "Dynamic Perimeter Scorer"
+        elif player.get('DEF', 0) >= 70 and (player.get('BLK', 0) > 55 or player.get('STL', 0) > 60):
+            archetype = "High-Impact Defensive Specialist"
+        elif player.get('PAS', 0) >= 70 and player.get('IQ', 0) >= 70:
+            archetype = "High-IQ Playmaker"
+        elif player.get('ORB', 0) >= 70 or player.get('BLK', 0) >= 55:
+            archetype = "Interior Anchor"
 
-# 2. High-Impact Defensive Specialist (High Defense + High Stocks)
-elif player.get('DEF', 0) >= 70 and (player.get('BLK', 0) > 55 or player.get('STL', 0) > 60):
-    archetype = "High-Impact Defensive Specialist"
+        if player.get('SCR', 0) >= 70 and player.get('DEF', 0) >= 70:
+            archetype = "Elite Two-Way Threat"
 
-# 3. High-IQ Playmaker (High Passing + High IQ)
-elif player.get('PAS', 0) >= 70 and player.get('IQ', 0) >= 70:
-    archetype = "High-IQ Playmaker"
-
-# 4. Interior Anchor (High Rebounding or Blocking)
-elif player.get('ORB', 0) >= 70 or player.get('BLK', 0) >= 55:
-    archetype = "Interior Anchor"
-
-# 5. Elite Two-Way Threat (Bonus: If they are elite at both SCR and DEF)
-if player.get('SCR', 0) >= 70 and player.get('DEF', 0) >= 70:
-    archetype = "Elite Two-Way Threat"
-
-# Analyze Play Style (Floor Habits)
-habits = []
-if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses")
-if player.get('CS', 0) > 10: habits.append("finding space as a catch-and-shoot threat")
-if player.get('PostUp', 0) > 8: habits.append("using their size in the low post")
+        # Analyze Play Style (Floor Habits)
+        habits = []
+        if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses")
+        if player.get('CS', 0) > 10: habits.append("finding space as a catch-and-shoot threat")
+        if player.get('PostUp', 0) > 8: habits.append("using their size in the low post")
         
-habit_str = f" often seen {habits[0]}" if habits else " playing within the flow of the offense"
+        habit_str = f" often seen {habits[0]}" if habits else " playing within the flow of the offense"
 
         # Shooting Profile specificity
         shot_note = ""
@@ -178,7 +160,6 @@ habit_str = f" often seen {habits[0]}" if habits else " playing within the flow 
         elif player.get('FT', 0) > 80:
             shot_note = "He has been shooting over 80% from the free throw line in college,"
         
-        # Upside Context vs Class Average
         growth_diff = player['Growth_Score'] - avg['Growth_Score']
         if growth_diff > 5:
             upside_type = "is a 'high-ceiling' project that scouts are buzzing about"
@@ -187,7 +168,6 @@ habit_str = f" often seen {habits[0]}" if habits else " playing within the flow 
         else:
             upside_type = "shows a steady developmental curve"
 
-        # Final Construction
         return (
             f"**{player['Full_Name']}** projects as a **{archetype}** who {upside_type}. "
             f"Compared to the {selected_year} class average, his {', '.join(high_traits) if high_traits else 'fundamentals'} "
@@ -199,7 +179,6 @@ habit_str = f" often seen {habits[0]}" if habits else " playing within the flow 
     with st.spinner('Scanning database for similar archetypes...'):
         match_traits = ['SCR', 'PAS', 'HDL', 'DRB', 'ORB', 'BLK', 'STL', 'DEF', 'IQ']
         target_vector = p_data[match_traits].values
-        # Search entire database (including past years if uploaded)
         others = player_stats[player_stats['Full_Name'] != selected_player].copy()
         others['Similarity'] = others.apply(lambda row: sum((target_vector - row[match_traits].values) ** 2) ** 0.5, axis=1)
         similar_players = others.sort_values('Similarity').head(3)
@@ -254,7 +233,6 @@ habit_str = f" often seen {habits[0]}" if habits else " playing within the flow 
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1.5])
     
     with h_col1:
-        # Action Tendencies Pie
         floor_acts = ["DriveKick", "DriveShot", "PostUp", "PullUp", "CS", "PASS"]
         available_floor = [h for h in floor_acts if h in p_data.index]
         if available_floor:
@@ -262,7 +240,6 @@ habit_str = f" often seen {habits[0]}" if habits else " playing within the flow 
             st.plotly_chart(fig_p1, use_container_width=True)
             
     with h_col2:
-        # Shot Location Pie
         floor_locs = ["LocATB", "LocCorner", "LodMid", "LocPaint"]
         available_locs = [h for h in floor_locs if h in p_data.index]
         if available_locs:
@@ -270,7 +247,6 @@ habit_str = f" often seen {habits[0]}" if habits else " playing within the flow 
             st.plotly_chart(fig_p2, use_container_width=True)
             
     with h_col3:
-        # Finishing Bar Chart
         freq_list = ["DUNK RATE", "RIM AREA RATE"]
         available_freq = [h for h in freq_list if h in p_data.index]
         if available_freq:
@@ -300,10 +276,10 @@ habit_str = f" often seen {habits[0]}" if habits else " playing within the flow 
             f2.add_trace(go.Bar(x=core_stats, y=c_data[pot_stats].values, name=comp_player, marker_color='indianred', opacity=0.6))
             f2.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300)
             st.plotly_chart(f2, use_container_width=True)
+
 with tab2:
     st.header(f"📋 {selected_year} Editable Draft Board")
     
-    # 1. Prepare Data
     bb_df = filtered_stats.copy()
     bb_df['My Rank'] = 0 
     
@@ -322,13 +298,10 @@ with tab2:
                                   bb_df[pot].fillna(0).astype(float).round(0).astype(int).astype(str)
             combined_cols.append(display_name)
 
-    # 2. Column Selection & Sorting
     bio_cols = ['My Rank', 'Full_Name', 'Pos', 'Overall_Pot', 'Growth_Score']
     existing_cols = [c for c in bio_cols + combined_cols if c in bb_df.columns]
     summary_df = bb_df[existing_cols].sort_values(by='Overall_Pot', ascending=False)
 
-    # 3. Render Table (The "Editor")
-    # We save this to a variable 'edited_df' so we can export the changes
     edited_df = st.data_editor(
         summary_df,
         column_config={
@@ -342,9 +315,7 @@ with tab2:
         key="big_board_save_fix"
     )
 
-    # 4. THE DOWNLOAD BUTTON (Restored)
     st.divider()
-    # This sorts the CSV so your #1 rank is at the top before downloading
     final_csv = edited_df.sort_values(by=['My Rank', 'Overall_Pot'], ascending=[True, False])
     
     st.download_button(
@@ -358,7 +329,6 @@ with tab3:
     st.header("⚖️ Risk vs. Reward Analysis")
     st.write("This chart visualizes player readiness (Current) against their remaining upside (Growth).")
 
-    # Create the Scatter Plot
     fig_risk = px.scatter(
         filtered_stats,
         x="Current_Rating",
@@ -372,23 +342,15 @@ with tab3:
         height=600
     )
 
-    # Add Quadrant Lines (based on class averages)
     avg_readiness = filtered_stats['Current_Rating'].mean()
     avg_growth = filtered_stats['Growth_Score'].mean()
 
     fig_risk.add_vline(x=avg_readiness, line_dash="dash", line_color="gray", annotation_text="Readiness Avg")
     fig_risk.add_hline(y=avg_growth, line_dash="dash", line_color="gray", annotation_text="Growth Avg")
 
-    # Quadrant Annotations
-    fig_risk.add_annotation(x=95, y=avg_growth+5, text="SUPERSTARS", showarrow=False, font=dict(color="green", size=16))
-    fig_risk.add_annotation(x=20, y=avg_growth+5, text="HIGH-UPSIDE PROJECTS", showarrow=False, font=dict(color="blue", size=16))
-    fig_risk.add_annotation(x=95, y=avg_growth-5, text="SAFE VETERANS", showarrow=False, font=dict(color="orange", size=16))
-
+    fig_risk.add_annotation(x=filtered_stats['Current_Rating'].max(), y=filtered_stats['Growth_Score'].max(), text="SUPERSTARS", showarrow=False, font=dict(color="green", size=16))
+    
     fig_risk.update_traces(textposition='top center')
     st.plotly_chart(fig_risk, use_container_width=True)
     
-
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
-
-
-
