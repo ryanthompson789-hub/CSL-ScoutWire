@@ -136,16 +136,28 @@ with tab1:
         high_traits = [stat for stat in ['SCR', 'DEF', 'PAS', 'IQ', 'BLK', 'STL', 'ORB'] 
                        if stat in player and player[stat] > avg[stat] + 8]
         
-        # Determine Archetype based on stats
-        archetype = "Well-Rounded Prospect"
-        if 'SCR' in high_traits and player.get('FG_ATB', 0) > 60:
-            archetype = "Dynamic Perimeter Scorer"
-        elif 'DEF' in high_traits and (player.get('BLK', 0) > avg['BLK'] or player.get('STL', 0) > avg['STL']):
-            archetype = "High-Impact Defensive Specialist"
-        elif 'PAS' in high_traits and player.get('IQ', 0) > avg['IQ']:
-            archetype = "High-IQ Playmaker"
-        elif player.get('ORB', 0) > avg['ORB'] + 10 or player.get('BLK', 0) > avg['BLK'] + 10:
-            archetype = "Interior Anchor"
+# Determine Archetype based on absolute thresholds
+archetype = "Well-Rounded Prospect"
+
+# 1. Dynamic Perimeter Scorer (High Scoring + 3pt shooting ability)
+if player.get('SCR', 0) >= 70 and player.get('FG_ATB', 0) > 38:
+    archetype = "Dynamic Perimeter Scorer"
+
+# 2. High-Impact Defensive Specialist (High Defense + High Stocks)
+elif player.get('DEF', 0) >= 70 and (player.get('BLK', 0) > 55 or player.get('STL', 0) > 60):
+    archetype = "High-Impact Defensive Specialist"
+
+# 3. High-IQ Playmaker (High Passing + High IQ)
+elif player.get('PAS', 0) >= 70 and player.get('IQ', 0) >= 70:
+    archetype = "High-IQ Playmaker"
+
+# 4. Interior Anchor (High Rebounding or Blocking)
+elif player.get('ORB', 0) >= 70 or player.get('BLK', 0) >= 55:
+    archetype = "Interior Anchor"
+
+# 5. Elite Two-Way Threat (Bonus: If they are elite at both SCR and DEF)
+if player.get('SCR', 0) >= 70 and player.get('DEF', 0) >= 70:
+    archetype = "Elite Two-Way Threat"
 
         # Analyze Play Style (Floor Habits)
         habits = []
@@ -377,4 +389,5 @@ with tab3:
     
 
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
