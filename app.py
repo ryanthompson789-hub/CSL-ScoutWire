@@ -122,13 +122,10 @@ with tab1:
     # --- ADVANCED SCOUTING REPORT FUNCTION ---
     def generate_scout_report(player, df_context):
         avg = df_context.mean(numeric_only=True)
-        
         high_traits = [stat for stat in ['SCR', 'DEF', 'PAS', 'IQ', 'BLK', 'STL', 'ORB'] 
                        if stat in player and player[stat] > avg[stat] + 8]
         
-        # Determine Archetype based on absolute thresholds
         archetype = "Well-Rounded Prospect"
-
         if player.get('SCR', 0) >= 70 and player.get('FG_ATB', 0) > 38:
             archetype = "Dynamic Perimeter Scorer"
         elif player.get('DEF', 0) >= 70 and (player.get('BLK', 0) > 55 or player.get('STL', 0) > 60):
@@ -141,7 +138,6 @@ with tab1:
         if player.get('SCR', 0) >= 70 and player.get('DEF', 0) >= 70:
             archetype = "Elite Two-Way Threat"
 
-        # Analyze Play Style (Floor Habits)
         habits = []
         if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses")
         if player.get('CS', 0) > 10: habits.append("finding space as a catch-and-shoot threat")
@@ -149,7 +145,6 @@ with tab1:
         
         habit_str = f" often seen {habits[0]}" if habits else " playing within the flow of the offense"
 
-        # Shooting Profile specificity
         shot_note = ""
         if player.get('FG_COR', 0) > 38:
             shot_note = "He is particularly dangerous from the corners,"
@@ -183,20 +178,34 @@ with tab1:
         others['Similarity'] = others.apply(lambda row: sum((target_vector - row[match_traits].values) ** 2) ** 0.5, axis=1)
         similar_players = others.sort_values('Similarity').head(3)
 
-   # --- TOP UI: HEADER & SUMMARY ---
+    # --- REORDERED INDIVIDUAL VIEW ---
+    
+    # 1. Player Name
     st.markdown(f"## {selected_player} | Class of {p_data.get(year_col, 'N/A')}")
     
-    # --- RANKING LOGIC (Position & Class-Wide) ---
+    # 2. Bio Metrics (Moved below name)
+    c1, c2, c3, c4, c5 = st.columns(5)
+    if 'Pos' in p_data: c1.metric("Position", p_data['Pos'])
+    if 'AGE' in p_data: c2.metric("Age", str(int(float(p_data['AGE']))))
+    if 'HT' in p_data: c3.metric("Height", p_data['HT'])
+    if 'WT' in p_data: c4.metric("Weight", str(p_data['WT']))
+    if 'FROM' in p_data: c5.metric("School/From", str(p_data['FROM']))
+
+    st.divider()
+
+    # 3. Scouting Director's Executive Summary
+    with st.expander("📝 Scouting Director's Executive Summary", expanded=True):
+        st.write(generate_scout_report(p_data, filtered_stats))
+
+    # 4. Scouting Intelligence (Ranking Logic)
     pos_peers = filtered_stats[filtered_stats['Pos'] == p_data['Pos']].copy()
     total_in_pos = len(pos_peers)
     total_in_class = len(filtered_stats)
     
     def get_ranks(stat_name):
-        # Position Rank
         pos_ranks = pos_peers[stat_name].rank(ascending=False, method='min')
         p_idx = list(pos_peers['Full_Name']).index(selected_player)
         p_rank = int(pos_ranks.iloc[p_idx])
-        # Class-Wide Rank
         class_ranks = filtered_stats[stat_name].rank(ascending=False, method='min')
         c_idx = list(filtered_stats['Full_Name']).index(selected_player)
         c_rank = int(class_ranks.iloc[c_idx])
@@ -205,16 +214,12 @@ with tab1:
     st.subheader(f"📍 Scouting Intelligence")
     st.caption(f"Comparing to **{total_in_pos}** {p_data['Pos']}s and **{total_in_class}** total prospects in the {selected_year} class.")
 
-    # Create toggle for Current vs Potential
     intel_tab_cur, intel_tab_pot = st.tabs(["📊 Current Ability Ranks", "🚀 Future Potential Ranks"])
-
-    # Define the Stat Groups
     core_keys = ['SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'DEF', 'STL', 'BLK', 'IQ']
     shoot_keys = ['FG_RA', 'FG_ITP', 'FG_MID', 'FG_COR', 'FG_ATB', 'FT']
     
     for intel_tab, suffix in [(intel_tab_cur, ""), (intel_tab_pot, "_POT")]:
         with intel_tab:
-            # Special Row for Overall Ceiling/Readiness
             m1, m2 = st.columns(2)
             if suffix == "":
                 p_r, c_r = get_ranks('Current_Rating')
@@ -224,7 +229,6 @@ with tab1:
                 m1.metric("Overall Ceiling", f"#{p_r} in Pos", f"#{c_r} Overall", delta_color="off")
 
             st.write("---")
-            # Core Stats Row
             st.write("**Core Skills**")
             cols = st.columns(len(core_keys))
             for i, key in enumerate(core_keys):
@@ -233,7 +237,6 @@ with tab1:
                     p_r, c_r = get_ranks(stat_key)
                     cols[i].metric(key, f"#{p_r}", f"#{c_r} OVR", delta_color="off")
 
-            # Shooting Stats Row
             st.write("**Shooting Profile**")
             cols_s = st.columns(len(shoot_keys))
             for i, key in enumerate(shoot_keys):
@@ -242,19 +245,6 @@ with tab1:
                     p_r, c_r = get_ranks(stat_key)
                     label = key.replace("FG_", "")
                     cols_s[i].metric(label, f"#{p_r}", f"#{c_r} OVR", delta_color="off")
-
-    st.divider()
-
-    with st.expander("📝 Scouting Director's Executive Summary", expanded=True):
-        st.write(generate_scout_report(p_data, filtered_stats))
-
-    # Bio Metrics
-    c1, c2, c3, c4, c5 = st.columns(5)
-    if 'Pos' in p_data: c1.metric("Position", p_data['Pos'])
-    if 'AGE' in p_data: c2.metric("Age", str(int(float(p_data['AGE']))))
-    if 'HT' in p_data: c3.metric("Height", p_data['HT'])
-    if 'WT' in p_data: c4.metric("Weight", str(p_data['WT']))
-    if 'FROM' in p_data: c5.metric("School/From", str(p_data['FROM']))
 
     st.divider()
 
@@ -336,7 +326,6 @@ with tab1:
             f2.add_trace(go.Bar(x=core_stats, y=c_data[pot_stats].values, name=comp_player, marker_color='indianred', opacity=0.6))
             f2.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300)
             st.plotly_chart(f2, use_container_width=True)
-
 with tab2:
     st.header(f"📋 {selected_year} Editable Draft Board")
     
@@ -414,6 +403,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
 
