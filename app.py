@@ -376,4 +376,5 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
 
-    st.info(f"💡 **How to read this:** Players in the **Top-Left** (like Janes) have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+    st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
