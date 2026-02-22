@@ -170,15 +170,7 @@ with tab1:
             f"while his long-term success will depend on refining his overall efficiency to reach that **{player['Overall_Pot']:.1f}** ceiling."
         )
 
-    # --- SIMILAR PLAYERS LOGIC ---
-    with st.spinner('Scanning database for similar archetypes...'):
-        match_traits = ['SCR', 'PAS', 'HDL', 'DRB', 'ORB', 'BLK', 'STL', 'DEF', 'IQ']
-        target_vector = p_data[match_traits].values
-        others = player_stats[player_stats['Full_Name'] != selected_player].copy()
-        others['Similarity'] = others.apply(lambda row: sum((target_vector - row[match_traits].values) ** 2) ** 0.5, axis=1)
-        similar_players = others.sort_values('Similarity').head(3)
-
-    # --- REORDERED INDIVIDUAL VIEW ---
+       # --- REORDERED INDIVIDUAL VIEW ---
     
     # 1. Player Name
     st.markdown(f"## {selected_player} | Class of {p_data.get(year_col, 'N/A')}")
@@ -248,34 +240,24 @@ with tab1:
 
     st.divider()
 
-    # --- MIDDLE UI: GRAPHS & SIMILAR PLAYERS ---
-    col_main, col_sim = st.columns([2.5, 1])
+    # --- MIDDLE UI: GRAPHS ---
+    # We removed the second column so the graphs use the full width
+    col_a, col_b = st.columns(2)
+    with col_a:
+        fig_main = go.Figure()
+        fig_main.add_trace(go.Bar(x=core_stats, y=p_data[core_stats].values, name='Current', marker_color='royalblue'))
+        fig_main.add_trace(go.Bar(x=core_stats, y=p_data[pot_stats].values, name='Potential', marker_color='lightskyblue', opacity=0.4, width=0.8))
+        fig_main.update_layout(title="Core Development", barmode='overlay', yaxis=dict(range=[0, 100]), height=350, margin=dict(l=20,r=20,t=40,b=20))
+        st.plotly_chart(fig_main, use_container_width=True)
 
-    with col_main:
-        col_a, col_b = st.columns(2)
-        with col_a:
-            fig_main = go.Figure()
-            fig_main.add_trace(go.Bar(x=core_stats, y=p_data[core_stats].values, name='Current', marker_color='royalblue'))
-            fig_main.add_trace(go.Bar(x=core_stats, y=p_data[pot_stats].values, name='Potential', marker_color='lightskyblue', opacity=0.4, width=0.8))
-            fig_main.update_layout(title="Core Development", barmode='overlay', yaxis=dict(range=[0, 100]), height=350, margin=dict(l=20,r=20,t=40,b=20))
-            st.plotly_chart(fig_main, use_container_width=True)
-
-        with col_b:
-            available_shoot = [s for s in shoot_stats if s in p_data.index]
-            available_shoot_pot = [s + '_POT' for s in available_shoot if s + '_POT' in p_data.index]
-            fig_shoot = go.Figure()
-            fig_shoot.add_trace(go.Bar(x=available_shoot, y=p_data[available_shoot].values, name='Current', marker_color='darkorange'))
-            fig_shoot.add_trace(go.Bar(x=available_shoot, y=p_data[available_shoot_pot].values, name='Potential', marker_color='gold', opacity=0.4, width=0.8))
-            fig_shoot.update_layout(title="Shooting Development", barmode='overlay', yaxis=dict(range=[0, 100]), height=350, margin=dict(l=20,r=20,t=40,b=20))
-            st.plotly_chart(fig_shoot, use_container_width=True)
-
-    with col_sim:
-        st.subheader("🔍 Similar Archetypes")
-        st.caption("Statistical twins from history")
-        for _, sim in similar_players.iterrows():
-            with st.expander(f"**{sim['Full_Name']}** ({sim.get(year_col, 'N/A')})"):
-                st.write(f"**Pos:** {sim['Pos']} | **HT:** {sim['HT']}")
-                st.write(f"Scoring: {sim['SCR']:.0f} | Defense: {sim['DEF']:.0f}")
+    with col_b:
+        available_shoot = [s for s in shoot_stats if s in p_data.index]
+        available_shoot_pot = [s + '_POT' for s in available_shoot if s + '_POT' in p_data.index]
+        fig_shoot = go.Figure()
+        fig_shoot.add_trace(go.Bar(x=available_shoot, y=p_data[available_shoot].values, name='Current', marker_color='darkorange'))
+        fig_shoot.add_trace(go.Bar(x=available_shoot, y=p_data[available_shoot_pot].values, name='Potential', marker_color='gold', opacity=0.4, width=0.8))
+        fig_shoot.update_layout(title="Shooting Development", barmode='overlay', yaxis=dict(range=[0, 100]), height=350, margin=dict(l=20,r=20,t=40,b=20))
+        st.plotly_chart(fig_shoot, use_container_width=True)
 
     # --- BOTTOM UI: HABITS & COMPARISON ---
     st.divider()
@@ -403,6 +385,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
 
