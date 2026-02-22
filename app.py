@@ -186,9 +186,23 @@ with tab1:
     # --- TOP UI: HEADER & SUMMARY ---
     st.markdown(f"## {selected_player} | Class of {p_data.get(year_col, 'N/A')}")
     
+    # --- POSITION RELATIVE LOGIC ---
+    # We compare the player only to others with the same 'Pos'
+    pos_peers = filtered_stats[filtered_stats['Pos'] == p_data['Pos']].copy()
+    
+    # Create the ranks (1 is best)
+    def_rank = pos_peers['DEF'].rank(ascending=False, method='min').iloc[list(pos_peers['Full_Name']).index(selected_player)]
+    pot_rank = pos_peers['Overall_Pot'].rank(ascending=False, method='min').iloc[list(pos_peers['Full_Name']).index(selected_player)]
+    total_in_pos = len(pos_peers)
+
+    # Display the Relative Context box
+    st.info(f"📍 **Position Context:** Among the **{total_in_pos}** players listed at **{p_data['Pos']}**, "
+            f"{selected_player} ranks **#{int(def_rank)} in Defense** and **#{int(pot_rank)} in Overall Ceiling**.")
+    
     with st.expander("📝 Scouting Director's Executive Summary", expanded=True):
         st.write(generate_scout_report(p_data, filtered_stats))
 
+    # Keep your original bio metrics here
     c1, c2, c3, c4, c5 = st.columns(5)
     if 'Pos' in p_data: c1.metric("Position", p_data['Pos'])
     if 'AGE' in p_data: c2.metric("Age", str(int(float(p_data['AGE']))))
@@ -354,3 +368,4 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
