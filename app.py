@@ -102,7 +102,7 @@ for i, row in project_board.iterrows():
         st.rerun()
 
 # --- TABBED NAVIGATION ---
-tab1, tab2, tab3 = st.tabs(["👤 Individual Prospect Scout", "📋 Draft Big Board", "📈 Strategy & Analysis"])
+tab1, tab2, tab3 = st.tabs(["👤 Individual Prospect Scout", "📋 Draft War Room", "📈 Strategy & Analysis"])
 
 with tab1:
     player_list = list(filtered_stats['Full_Name'].unique())
@@ -311,7 +311,7 @@ with tab1:
             f2.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300)
             st.plotly_chart(f2, use_container_width=True)
 with tab2:
-    st.header(f"📋 {selected_year} Editable Draft Board")
+    st.header(f"📋 {selected_year} Draft War Room")
     
     bb_df = filtered_stats.copy()
     bb_df['My Rank'] = 0 
@@ -345,7 +345,7 @@ with tab2:
         },
         hide_index=True,
         use_container_width=True,
-        key="big_board_save_fix"
+        key="war_room_save_fix"
     )
 
     st.divider()
@@ -354,7 +354,7 @@ with tab2:
     st.download_button(
         label="📥 Export My Custom Draft Rankings",
         data=final_csv.to_csv(index=False),
-        file_name=f"MyDraftBoard_{selected_year}.csv",
+        file_name=f"MyWarRoom_{selected_year}.csv",
         mime="text/csv"
     )
 
@@ -387,6 +387,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
 
