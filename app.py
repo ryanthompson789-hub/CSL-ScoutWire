@@ -169,7 +169,7 @@ with tab1:
             f"**{player['Full_Name']}** projects as a **{archetype}** who {upside_type}. "
             f"Compared to the {selected_year} class average, his {', '.join(high_traits) if high_traits else 'fundamentals'} "
             f"stand out immediately. You'll find him{habit_str}. {shot_note} "
-            f"while his long-term success will depend on refining his overall efficiency to reach that **{player['Overall_Pot']:.1f}** ceiling."
+            f"while his long-term success will depend on reaching that **{player['Overall_Pot']:.1f}** ceiling."
         )
 
        # --- REORDERED INDIVIDUAL VIEW ---
@@ -387,6 +387,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
 
