@@ -119,63 +119,64 @@ with tab1:
 
     p_data = filtered_stats[filtered_stats['Full_Name'] == selected_player].iloc[0]
 
-   # --- POSITION-SPECIFIC SCOUTING REPORT ---
+  # --- POSITION-SPECIFIC SCOUTING REPORT ---
     def generate_scout_report(player, df_context):
         avg = df_context.mean(numeric_only=True)
         pos = player.get('Pos', 'N/A')
         
         # 1. Define Position-Specific Priorities & Thresholds
-        # Keys: 'primary' (must be high for archetype), 'bonus' (extra traits to mention)
         pos_logic = {
             'PG': {'primary': ['PAS', 'HDL'], 'bonus': ['STL', 'IQ'], 'min': 70},
-            'SG': {'primary': ['SCR', 'HDL'], 'bonus': ['STL',], 'min': 65},
-            'SF': {'primary': ['SCR', 'DEF'], 'bonus': ['ORB', 'DRB'], 'min': 65},
+            'SG': {'primary': ['SCR', 'HDL'], 'bonus': ['STL', 'FG_ATB'], 'min': 70},
+            'SF': {'primary': ['SCR', 'DEF'], 'bonus': ['ORB', 'FG_COR'], 'min': 68},
             'PF': {'primary': ['DRB', 'DEF'], 'bonus': ['ORB', 'BLK'], 'min': 65},
             'C':  {'primary': ['BLK', 'ORB'], 'bonus': ['DRB', 'DEF'], 'min': 65}
         }
         
         logic = pos_logic.get(pos, {'primary': ['SCR', 'DEF'], 'bonus': ['IQ'], 'min': 70})
         
-        # 2. Identify High Traits (Relative to class average)
-        high_traits = [stat for stat in ['SCR', 'DEF', 'PAS', 'IQ', 'BLK', 'STL', 'ORB', 'HDL'] 
+        # 2. Identify High Traits (Including shooting bonuses)
+        # We check if these are significantly above average
+        check_stats = ['SCR', 'DEF', 'PAS', 'IQ', 'BLK', 'STL', 'ORB', 'HDL', 'FG_COR', 'FG_ATB']
+        high_traits = [stat for stat in check_stats 
                        if stat in player and player[stat] > avg[stat] + 8]
         
         # 3. Dynamic Archetype Logic
         archetype = "Well-Rounded Prospect"
-        
-        # Check primary skills for position
         primaries_met = all(player.get(s, 0) >= logic['min'] for s in logic['primary'])
         
         if pos == 'PG' and primaries_met:
             archetype = "Floor General" if player.get('IQ', 0) > 70 else "Dynamic Playmaker"
         elif pos == 'SG' and primaries_met:
-            archetype = "Sharpshooting Guard" if player.get('FG_ATB', 0) > 38 else "Scoring Specialist"
+            archetype = "Sharpshooting Guard" if player.get('FG_ATB', 0) > 35 else "Scoring Specialist"
         elif pos == 'SF' and primaries_met:
             archetype = "Elite Two-Way Wing" if player.get('DEF', 0) >= 70 else "Slashing Wing"
         elif pos in ['PF', 'C'] and primaries_met:
-            archetype = "Paint Protector" if player.get('BLK', 0) > 60 else "Glass Cleaner"
+            archetype = "Paint Protector" if player.get('BLK', 0) > 55 else "Glass Cleaner"
         elif player.get('DEF', 0) >= 75:
             archetype = "Lockdown Specialist"
 
         # 4. Habit Strings
         habits = []
-        if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses and find the open man")
+        if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses")
         if player.get('CS', 0) > 10: habits.append("finding space as a catch-and-shoot threat")
         if player.get('PostUp', 0) > 8: habits.append("using their size in the low post")
-        if player.get('DriveShot', 0) > 8: habits.append("driving the lane attempting to finish")
-        if player.get('PASS', 0) > 80: habits.append("passing instead of taking the shot")
         habit_str = f" often seen {habits[0]}" if habits else " playing within the flow of the offense"
 
         # 5. Build the Report
         growth_diff = player['Growth_Score'] - avg['Growth_Score']
         upside_type = "a 'high-ceiling' project" if growth_diff > 5 else "pro-ready" if growth_diff < -5 else "a steady developer"
 
+        # FIXED RANK LOGIC: Using the context already in the app
+        pos_peers = df_context[df_context['Pos'] == pos]
+        pos_pot_rank = int(pos_peers['Overall_Pot'].rank(ascending=False, method='min').loc[player.name])
+
         report = (
             f"**{player['Full_Name']}** projects as a **{archetype}** for the next level. "
             f"As a {pos}, his ability to handle {', '.join(logic['primary'])} at a high level makes him {upside_type}. "
             f"Scouts are particularly impressed by his {', '.join(high_traits) if high_traits else 'fundamentals'}, "
             f"and you'll find him{habit_str}. "
-            f"While he is currently ranked **#{int(get_ranks('Overall_Pot')[0])}** among {pos}s in potential, "
+            f"While he is currently ranked **#{pos_pot_rank}** among {pos}s in potential, "
             f"his path to an **{player['Overall_Pot']:.1f}** ceiling depends on his consistency."
         )
         return report
@@ -395,6 +396,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
 
