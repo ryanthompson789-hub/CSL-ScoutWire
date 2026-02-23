@@ -126,9 +126,9 @@ with tab1:
                        if stat in player and player[stat] > avg[stat] + 8]
         
         archetype = "Well-Rounded Prospect"
-        if player.get('SCR', 0) >= 70 and player.get('FG_ATB', 0) > 38:
+        if player.get('SCR', 0) >= 65 and player.get('FG_ATB', 0) > 38:
             archetype = "Dynamic Perimeter Scorer"
-        elif player.get('DEF', 0) >= 70 and (player.get('BLK', 0) > 55 or player.get('STL', 0) > 60):
+        elif player.get('DEF', 0) >= 65 and (player.get('BLK', 0) > 55 or player.get('STL', 0) > 60):
             archetype = "High-Impact Defensive Specialist"
         elif player.get('PAS', 0) >= 70 and player.get('IQ', 0) >= 70:
             archetype = "High-IQ Playmaker"
@@ -139,9 +139,11 @@ with tab1:
             archetype = "Elite Two-Way Threat"
 
         habits = []
-        if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses")
+        if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses and find the open man")
         if player.get('CS', 0) > 10: habits.append("finding space as a catch-and-shoot threat")
         if player.get('PostUp', 0) > 8: habits.append("using their size in the low post")
+        if player.get('DriveShot', 0) > 8: habits.append("attacking the paint looking to finish at the rim")
+        if player.get('PASS', 0) > 80: habits.append("dishing it out rather than shooting")
         
         habit_str = f" often seen {habits[0]}" if habits else " playing within the flow of the offense"
 
@@ -385,6 +387,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
 
