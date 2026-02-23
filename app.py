@@ -316,17 +316,21 @@ with tab2:
     bb_df = filtered_stats.copy()
     bb_df['My Rank'] = 0 
     
+    # --- EXTENDED STAT PAIRS (Added Shooting) ---
     stat_pairs = {
         'SCR': 'SCR_POT', 'PAS': 'PAS_POT', 'HDL': 'HDL_POT', 
         'ORB': 'ORB_POT', 'DRB': 'DRB_POT', 'BLK': 'BLK_POT', 
         'STL': 'STL_POT', 'DEF': 'DEF_POT', 'IQ': 'IQ_POT',
-        'DIS': 'DIS_POT', 'DRFL': 'DRFL_POT'
+        # Added Shooting Stats
+        'FG_RA': 'FG_RA_POT', 'FG_ITP': 'FG_ITP_POT', 'FG_MID': 'FG_MID_POT',
+        'FG_COR': 'FG_COR_POT', 'FG_ATB': 'FG_ATB_POT', 'FT': 'FT_POT'
     }
 
     combined_cols = []
     for cur, pot in stat_pairs.items():
         if cur in bb_df.columns and pot in bb_df.columns:
-            display_name = f"{cur} (C/P)"
+            # Shorten labels for better table fitting (e.g., FG_RA -> RA)
+            display_name = f"{cur.replace('FG_', '')} (C/P)"
             bb_df[display_name] = bb_df[cur].fillna(0).astype(float).round(0).astype(int).astype(str) + " / " + \
                                   bb_df[pot].fillna(0).astype(float).round(0).astype(int).astype(str)
             combined_cols.append(display_name)
@@ -342,6 +346,8 @@ with tab2:
             "Full_Name": st.column_config.TextColumn("Player", pinned=True),
             "Overall_Pot": st.column_config.NumberColumn("Ceiling", format="%.1f"),
             "Growth_Score": st.column_config.NumberColumn("Upside (+)", format="%.1f"),
+            # Ensure the wide table is manageable
+            **{col: st.column_config.TextColumn(width="small") for col in combined_cols}
         },
         hide_index=True,
         use_container_width=True,
@@ -357,7 +363,6 @@ with tab2:
         file_name=f"MyWarRoom_{selected_year}.csv",
         mime="text/csv"
     )
-
 with tab3:
     st.header("⚖️ Risk vs. Reward Analysis")
     st.write("This chart visualizes player readiness (Current) against their remaining upside (Growth).")
@@ -387,6 +392,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
 
