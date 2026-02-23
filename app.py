@@ -316,12 +316,11 @@ with tab2:
     bb_df = filtered_stats.copy()
     bb_df['My Rank'] = 0 
     
-    # --- EXTENDED STAT PAIRS (Added Shooting) ---
+    # 1. Stat Pairs for the (C/P) columns
     stat_pairs = {
         'SCR': 'SCR_POT', 'PAS': 'PAS_POT', 'HDL': 'HDL_POT', 
         'ORB': 'ORB_POT', 'DRB': 'DRB_POT', 'BLK': 'BLK_POT', 
         'STL': 'STL_POT', 'DEF': 'DEF_POT', 'IQ': 'IQ_POT',
-        # Added Shooting Stats
         'FG_RA': 'FG_RA_POT', 'FG_ITP': 'FG_ITP_POT', 'FG_MID': 'FG_MID_POT',
         'FG_COR': 'FG_COR_POT', 'FG_ATB': 'FG_ATB_POT', 'FT': 'FT_POT'
     }
@@ -329,24 +328,28 @@ with tab2:
     combined_cols = []
     for cur, pot in stat_pairs.items():
         if cur in bb_df.columns and pot in bb_df.columns:
-            # Shorten labels for better table fitting (e.g., FG_RA -> RA)
             display_name = f"{cur.replace('FG_', '')} (C/P)"
             bb_df[display_name] = bb_df[cur].fillna(0).astype(float).round(0).astype(int).astype(str) + " / " + \
                                   bb_df[pot].fillna(0).astype(float).round(0).astype(int).astype(str)
             combined_cols.append(display_name)
 
-    bio_cols = ['My Rank', 'Full_Name', 'Pos', 'Overall_Pot', 'Growth_Score']
+    # 2. Updated Columns to include 'Current_Rating'
+    # We put Current and Ceiling side-by-side for easy comparison
+    bio_cols = ['My Rank', 'Full_Name', 'Pos', 'Current_Rating', 'Overall_Pot', 'Growth_Score']
     existing_cols = [c for c in bio_cols + combined_cols if c in bb_df.columns]
+    
+    # Sort by Ceiling (Overall_Pot) by default
     summary_df = bb_df[existing_cols].sort_values(by='Overall_Pot', ascending=False)
 
+    # 3. Enhanced Table Configuration
     edited_df = st.data_editor(
         summary_df,
         column_config={
             "My Rank": st.column_config.NumberColumn("My Rank", min_value=1, format="%d"),
             "Full_Name": st.column_config.TextColumn("Player", pinned=True),
-            "Overall_Pot": st.column_config.NumberColumn("Ceiling", format="%.1f"),
+            "Current_Rating": st.column_config.NumberColumn("Current", format="%.1f", help="Average of all current core stats"),
+            "Overall_Pot": st.column_config.NumberColumn("Ceiling", format="%.1f", help="Average of all potential core stats"),
             "Growth_Score": st.column_config.NumberColumn("Upside (+)", format="%.1f"),
-            # Ensure the wide table is manageable
             **{col: st.column_config.TextColumn(width="small") for col in combined_cols}
         },
         hide_index=True,
@@ -392,6 +395,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
+
 
 
 
