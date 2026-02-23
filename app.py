@@ -394,14 +394,8 @@ with tab3:
     fig_risk.update_traces(textposition='top center')
     st.plotly_chart(fig_risk, use_container_width=True)
     
-    st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. 
-    Top-Right (Superstars): High Readiness + High Growth. These are your elite targets.
+    st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings.")
 
-    Top-Left (High Upside/Projects): Low Readiness + High Growth. These players are "raw" but have high ceilings.
-
-    Bottom-Right (High Floor/Role Players): High Readiness + Low Growth. Ready to play now, but likely won't improve much more.
-
-    Bottom-Left (Low Priority): Low Readiness + Low Growth.")
 
 
 
