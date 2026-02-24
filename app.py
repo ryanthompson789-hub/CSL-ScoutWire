@@ -413,34 +413,43 @@ identity_stats = [
 # Ensure we only use stats that actually exist in the data to avoid errors
 existing_identity = [s for s in identity_stats if s in filtered_stats.columns]
 
-# 2. Calculate the "Distance"
+# 2. Calculate the "Distance" using a more sensitive penalty
 comparison_df = filtered_stats.copy()
 comparison_df = comparison_df[comparison_df['Full_Name'] != selected_player]
 
-# Calculate weighted difference (Lower score = more similar)
-comparison_df['Similarity_Score'] = comparison_df[existing_identity].apply(
-    lambda row: sum(abs(row - p_data[existing_identity])), axis=1
+# Calculate the mean difference across identity stats
+# We use a 'Squared Difference' (Euclidean) to punish outliers more heavily
+def calculate_match(row, target_stats):
+    # Sum of absolute differences
+    diff = sum(abs(row[existing_identity] - target_stats[existing_identity]))
+    
+    # We calibrate the percentage: 
+    # In a typical draft, a total diff of ~150 points across 13 stats 
+    # should feel like a 'Low Match' (~60-70%).
+    # We'll use 400 as a "Max Realistic Difference" for scaling.
+    max_realistic_diff = 400 
+    percentage = 100 - (min(diff, max_realistic_diff) / max_realistic_diff * 100)
+    return percentage
+
+comparison_df['Match_Pct'] = comparison_df.apply(
+    lambda row: calculate_match(row, p_data), axis=1
 )
 
 # 3. Get the Top 3
-similar_prospects = comparison_df.sort_values('Similarity_Score').head(3)
+similar_prospects = comparison_df.sort_values('Match_Pct', ascending=False).head(3)
 
 # 4. Display Cards
 sim_cols = st.columns(3)
 for i, (idx, sim_p) in enumerate(similar_prospects.iterrows()):
     with sim_cols[i]:
         # Calculate a % match for the UI (Optional but looks cool)
-        # Max possible diff per stat is ~100. We'll show a rough 'Match %'
-        match_pct = max(0, 100 - (sim_p['Similarity_Score'] / len(existing_identity)))
-        
-        st.markdown(f"""
-            <div style="border: 1px solid #D4AF37; padding: 15px; border-radius: 10px; background-color: white; height: 100%;">
-                <p style="margin:0; font-size: 0.8rem; color: #64748B;">{match_pct:.1f}% STYLE MATCH</p>
-                <h4 style="margin:0; color: #1E293B;">{sim_p['Full_Name']}</h4>
-                <p style="margin:0; color: #D4AF37; font-weight: bold;">{sim_p['Pos']} | Pot: {sim_p['Overall_Pot']:.1f}</p>
-                <hr style="margin: 10px 0;">
-            </div>
-        """, unsafe_allow_html=True)
+       # Inside your loop for displaying cards:
+match_val = sim_p['Match_Pct']
+st.markdown(f"""
+    <div style="border: 1px solid #D4AF37; padding: 15px; border-radius: 10px; background-color: white; height: 100%;">
+        <p style="margin:0; font-size: 0.8rem; color: #64748B;">{match_val:.1f}% STYLE MATCH</p>
+        ...
+""")
         
         if st.button(f"View {sim_p['Full_Name']}", key=f"sim_{sim_p['Full_Name']}"):
             st.session_state.selected_player = sim_p['Full_Name']
@@ -655,6 +664,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
