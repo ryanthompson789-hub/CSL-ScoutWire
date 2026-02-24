@@ -293,7 +293,7 @@ with tab1:
     st.header("⚔️ Prospect Comparison Tool")
     comp_player = st.selectbox("Select Player to Compare", ["None"] + list(player_stats['Full_Name'].unique()))
 
-if comp_player != "None":
+        if comp_player != "None":
         c_data = player_stats[player_stats['Full_Name'] == comp_player].iloc[0]
         
         # --- ROW 1: CORE STATS COMPARISON ---
@@ -425,6 +425,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
