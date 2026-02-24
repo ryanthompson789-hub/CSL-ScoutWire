@@ -381,23 +381,23 @@ with tab2:
     with col1:
         st.markdown("**Offense**")
         min_scr  = st.slider("Scoring (SCR)", 0, 100, 0)
-        min_drfl = st.slider("Drive/Foul (DRFL)", 0, 100, 0)
         min_pas  = st.slider("Passing (PAS)", 0, 100, 0)
         min_hdl  = st.slider("Handling (HDL)", 0, 100, 0)
+        min_drfl = st.slider("Draw Foul (DRFL)", 0, 100, 0)
         min_iq   = st.slider("Bball IQ", 0, 100, 0)
 
     with col2:
         st.markdown("**Defense & Glass**")
         min_def = st.slider("Defense (DEF)", 0, 100, 0)
-        min_dis = st.slider("Discipline/Interior (DIS)", 0, 100, 0)
         min_blk = st.slider("Blocking (BLK)", 0, 100, 0)
         min_stl = st.slider("Steals (STL)", 0, 100, 0)
+        min_dis = st.slider("Discipline (DIS)", 0, 100, 0)
         min_orb = st.slider("Off. Rebs (ORB)", 0, 100, 0)
         min_drb = st.slider("Def. Rebs (DRB)", 0, 100, 0)
 
     with col3:
         st.markdown("**Shooting Profile**")
-        min_ra  = st.slider("At Rim (RA)", 0, 100, 0)
+        min_ra  = st.slider("Restricted Area (RA)", 0, 100, 0)
         min_itp = st.slider("In The Paint (ITP)", 0, 100, 0) # Added ITP here
         min_mid = st.slider("Mid-Range", 0, 100, 0)
         min_cor = st.slider("Corner 3s", 0, 100, 0)
@@ -545,6 +545,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
