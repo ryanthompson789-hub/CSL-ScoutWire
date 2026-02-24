@@ -122,16 +122,24 @@ tab1, tab2, tab3, tab4 = st.tabs([
 
 with tab1:
     player_list = list(filtered_stats['Full_Name'].unique())
-    default_index = 0
-    if st.session_state.get('selected_player') in player_list:
-        default_index = player_list.index(st.session_state.selected_player)
+    
+    # 1. Sync session state with the list
+    if st.session_state.selected_player not in player_list:
+        st.session_state.selected_player = player_list[0]
+    
+    # 2. Get the row number for the dropdown
+    default_index = player_list.index(st.session_state.selected_player)
 
+    # 3. The Dropdown Menu
     selected_player = st.selectbox(
         "Select Primary Prospect", 
         player_list, 
         index=default_index,
         key="main_player_selector"
     )
+    
+    # Update state if the user manually clicks the dropdown
+    st.session_state.selected_player = selected_player
 
     p_data = filtered_stats[filtered_stats['Full_Name'] == selected_player].iloc[0]
 
@@ -519,6 +527,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
