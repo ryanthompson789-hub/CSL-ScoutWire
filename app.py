@@ -360,88 +360,80 @@ with tab1:
             st.plotly_chart(f4, use_container_width=True)
 with tab2:
     st.header("🎯 Advanced Player Finder")
+    st.write("Set your baseline requirements to identify prospects that fit your team's system.")
+
+    # --- ARCHETYPE FILTERS ---
+    col1, col2 = st.columns(2)
     
-    # --- SEARCH MODE TOGGLE ---
-    search_mode = st.radio(
-        "Search Based On:",
-        ["Current Ratings", "Potential Ratings"],
-        horizontal=True,
-        help="Switch to 'Potential' to search based on a player's projected ceiling."
-    )
-    
-    # Logic to handle the suffix based on toggle
-    sfx = "_POT" if search_mode == "Potential Ratings" else ""
-    
-    st.write(f"Currently searching by: **{search_mode}**")
+    with col1:
+        st.subheader("⚔️ Offensive Baselines")
+        min_scr = st.slider("Min Scoring (SCR)", 0, 100, 60)
+        min_pas = st.slider("Min Passing (PAS)", 0, 100, 40)
+        min_hdl = st.slider("Min Ball Handling (HDL)", 0, 100, 40)
+        min_iq  = st.slider("Min Basketball IQ", 0, 100, 50)
 
-    # --- SEARCH FILTERS ---
-    f_col1, f_col2, f_col3 = st.columns([1.2, 1, 1])
-    
-    with f_col1:
-        st.subheader("⚔️ Offense")
-        # Shooting
-        min_cor = st.slider(f"Min Corner 3 ({'COR' + sfx})", 0, 60, 0)
-        min_atb = st.slider(f"Min ATB 3 ({'ATB' + sfx})", 0, 60, 0)
-        min_mid = st.slider(f"Min Midrange ({'MID' + sfx})", 0, 99, 0)
-        min_ra  = st.slider(f"Min Rim Area ({'RA' + sfx})", 0, 99, 0)
-        min_ft  = st.slider(f"Min FT ({'FT' + sfx})", 0, 99, 0)
-        # Core
-        o_c1, o_c2 = st.columns(2)
-        min_scr = o_c1.number_input(f"Min SCR{sfx}", 0, 99, 0)
-        min_pas = o_c2.number_input(f"Min PAS{sfx}", 0, 99, 0)
-        min_hdl = o_c1.number_input(f"Min HDL{sfx}", 0, 99, 0)
-        min_orb = o_c2.number_input(f"Min OREB{sfx}", 0, 99, 0)
-        min_iq  = o_c1.number_input(f"Min IQ{sfx}", 0, 99, 0)
-        min_drfl= o_c2.number_input(f"Min DRFL{sfx}", 0, 25, 0)
+    with col2:
+        st.subheader("🛡️ Defensive & Physical")
+        min_def = st.slider("Min Defensive Rating (DEF)", 0, 100, 50)
+        min_blk = st.slider("Min Shot Blocking (BLK)", 0, 100, 30)
+        min_stl = st.slider("Min Steal Ability (STL)", 0, 100, 30)
+        min_orb = st.slider("Min Off. Rebounding (ORB)", 0, 100, 30)
 
-    with f_col2:
-        st.subheader("🛡️ Defense")
-        min_def = st.slider(f"Min DEF{sfx}", 0, 99, 0)
-        min_drb = st.slider(f"Min DRB{sfx}", 0, 99, 0)
-        min_stl = st.slider(f"Min STL{sfx}", 0, 99, 0)
-        min_blk = st.slider(f"Min BLK{sfx}", 0, 99, 0)
-        min_dis = st.slider(f"Min DIS{sfx}", 0, 99, 0)
-
-    with f_col3:
-        st.subheader("📋 Requirements")
-        min_ceil = st.number_input("Minimum Ceiling (OVR Pot)", 0.0, 99.0, 0.0)
-        min_growth = st.number_input("Minimum Growth Score", 0.0, 30.0, 0.0)
-        search_pos = st.multiselect("Limit to Positions", options=all_positions, default=all_positions)
-
-    # --- DYNAMIC QUERY LOGIC ---
-    # Note how we use f'stat{sfx}' to switch columns based on the toggle
-    query_df = filtered_stats[
-        (filtered_stats[f'FG_COR{sfx}'] >= min_cor) & (filtered_stats[f'FG_ATB{sfx}'] >= min_atb) &
-        (filtered_stats[f'FG_MID{sfx}'] >= min_mid) & (filtered_stats[f'FG_RA{sfx}'] >= min_ra) &
-        (filtered_stats[f'FT{sfx}'] >= min_ft) &
-        (filtered_stats[f'SCR{sfx}'] >= min_scr) & (filtered_stats[f'PAS{sfx}'] >= min_pas) &
-        (filtered_stats[f'HDL{sfx}'] >= min_hdl) & (filtered_stats[f'ORB{sfx}'] >= min_orb) &
-        (filtered_stats[f'IQ{sfx}'] >= min_iq) & (filtered_stats[f'DRFL{sfx}'] >= min_drfl) &
-        (filtered_stats[f'DEF{sfx}'] >= min_def) & (filtered_stats[f'DRB{sfx}'] >= min_drb) &
-        (filtered_stats[f'STL{sfx}'] >= min_stl) & (filtered_stats[f'BLK{sfx}'] >= min_blk) &
-        (filtered_stats[f'DIS{sfx}'] >= min_dis) & (filtered_stats['Overall_Pot'] >= min_ceil) &
-        (filtered_stats['Growth_Score'] >= min_growth) & (filtered_stats['Pos'].isin(search_pos))
-    ].copy()
-
-    # --- RESULTS ---
     st.divider()
-    st.subheader(f"🔍 Search Results ({len(query_df)} prospects found)")
+
+    # --- POSITION & POTENTIAL FILTERS ---
+    c1, c2, c3 = st.columns([1, 1, 1])
+    with c1:
+        pos_filter = st.multiselect("Filter by Position", options=all_positions, default=all_positions)
+    with c2:
+        min_pot = st.slider("Min Overall Potential", 0, 100, 65)
+    with c3:
+        # Toggle between looking at current stats or their projected ceiling
+        stat_mode = st.radio("Search Mode", ["Current Ratings", "Potential Ratings"], horizontal=True)
+
+    # --- QUERY LOGIC ---
+    # Define which columns to check based on the radio button selection
+    suffix = "_POT" if stat_mode == "Potential Ratings" else ""
+    
+    query_df = filtered_stats[
+        (filtered_stats['Pos'].isin(pos_filter)) &
+        (filtered_stats['Overall_Pot' if suffix == "_POT" else 'Current_Rating'] >= min_pot) &
+        (filtered_stats['SCR' + suffix] >= min_scr) &
+        (filtered_stats['PAS' + suffix] >= min_pas) &
+        (filtered_stats['HDL' + suffix] >= min_hdl) &
+        (filtered_stats['DEF' + suffix] >= min_def) &
+        (filtered_stats['IQ' + suffix] >= min_iq) &
+        (filtered_stats['BLK' + suffix] >= min_blk) &
+        (filtered_stats['STL' + suffix] >= min_stl) &
+        (filtered_stats['ORB' + suffix] >= min_orb)
+    ]
+
+    # --- RESULTS DISPLAY ---
+    st.subheader(f"🔍 Matches Found: {len(query_df)}")
     
     if not query_df.empty:
-        # Display the stats that match the search mode
-        cols_to_show = ['Full_Name', 'Pos', 'Overall_Pot', f'SCR{sfx}', f'PAS{sfx}', f'DEF{sfx}', f'FG_ATB{sfx}']
-        st.dataframe(query_df[cols_to_show].sort_values('Overall_Pot', ascending=False), use_container_width=True, hide_index=True)
+        # Displaying a clean table of results
+        display_cols = ['Full_Name', 'Pos', 'AGE', 'SCR', 'DEF', 'PAS', 'Overall_Pot']
+        st.dataframe(query_df[display_cols].sort_values('Overall_Pot', ascending=False), use_container_width=True)
+
+        st.divider()
         
-        # Create a function to handle the click
-        def launch_player(name):
-            st.session_state.selected_player = name
-
-        # Find the button in your results logic
-        target_player = st.selectbox("Detailed View", query_df['Full_Name'].unique())
-
-        if st.button("Launch Scouting Report", on_click=lambda: st.session_state.update({"selected_player": target_player})):
-            st.success(f"✅ Report for {target_player} is ready in Tab 1!")
-            st.info("Click the 'Individual Prospect Scout' tab above to view.")
+        # --- THE TELEPORT BUTTON ---
+        st.write("### 🚀 Rapid Scout")
+        st.caption("Select a player from your search results to launch their full deep-dive scouting report.")
+        
+        # Dropdown to select from the filtered results
+        target_player = st.selectbox("Select Prospect to Launch", query_df['Full_Name'].unique())
+        
+        # The button that syncs with Tab 1
+        st.button(
+            "Launch Scouting Report", 
+            on_click=lambda: st.session_state.update({"selected_player": target_player}),
+            use_container_width=True,
+            type="primary"
+        )
+    else:
+        st.warning("No prospects match those strict criteria. Try lowering your defensive or physical baselines.")
 
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -530,6 +522,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
