@@ -30,11 +30,15 @@ if not uploaded_files:
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown("<h1 class='league-title'>CHAMPION SIM LEAGUE</h1>", unsafe_allow_html=True)
-        st.markdown("<p class='league-subtitle'>Scouting & Personnel Terminal</p>", unsafe_allow_html=True)
+        st.markdown("<h1 class='league-title'>CSL ScoutWire</h1>", unsafe_allow_html=True)
+        st.markdown("<p class='league-subtitle'>Scouting Analysis Tool</p>", unsafe_allow_html=True)
         st.markdown("<hr style='border: 2px solid #D4AF37; width: 40%; margin: 20px auto;'>", unsafe_allow_html=True)
         st.markdown('<div class="trophy-icon">🏆</div>', unsafe_allow_html=True)
         st.markdown("<p class='instruction'>Please upload league-standard scouting CSVs from CSLO to begin.</p>", unsafe_allow_html=True)
+
+    # 4. Footer info
+    st.markdown("<p style='color: #94A3B8; font-size: 0.8rem; text-align: center; margin-top: 40px; font-weight: bold;'>VERSION 1.0</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #CBD5E1; font-size: 0.7rem; text-align: center;'>Internal data for CSL GMs only.</p>", unsafe_allow_html=True)
     
     st.stop() # Prevents the rest of the app from showing until the first file is uploaded
 
@@ -590,6 +594,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
