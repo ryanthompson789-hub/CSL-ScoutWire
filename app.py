@@ -134,7 +134,7 @@ with tab1:
     # Sync back in case they change it manually in Tab 1
     st.session_state.selected_player = selected_player
 
-  # --- ADVANCED SCOUTING REPORT FUNCTION ---
+    # --- ADVANCED SCOUTING REPORT FUNCTION ---
     def generate_scout_report(player, df_context):
         avg = df_context.mean(numeric_only=True)
         high_traits = [stat for stat in ['SCR', 'DEF', 'PAS', 'IQ', 'BLK', 'STL', 'ORB'] 
@@ -522,6 +522,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
