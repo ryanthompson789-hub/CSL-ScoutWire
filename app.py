@@ -201,11 +201,11 @@ with tab1:
             elif is_playmaker:
                 archetype = "High-IQ Floor General"
             elif is_scorer:
-                archetype = "Natural Three-Level Scorer"
+                archetype = "Natural Scorer"
             elif is_defender and is_big_man:
                 archetype = "Paint-Protecting Anchor"
             elif is_defender:
-                archetype = "Lockdown Wing Specialist"
+                archetype = "Lockdown Specialist"
             elif is_big_man:
                 archetype = "Interior Physical Presence"
             else:
@@ -228,20 +228,25 @@ with tab1:
             # 5. Narrative Construction
             report = (
                 f"**Scouting Director's Note:** {player['Full_Name']} projects as a **{archetype}**. "
-                f"His current toolkit is defined by {player.get('SCR', 0):.0f} scoring and {player.get('DEF', 0):.0f} defensive impact. "
+                f"His current toolkit is defined by {player.get('SCR', 0):.0f} scoring and {player.get('DEF', 0):.0f} defense. "
                 f"{context_note} "
             )
 
-            # 6. The "Upside" finisher
-            if player['Growth_Score'] > 12:
-                report += f"Drafting him is a high-reward play—his **+{player['Growth_Score']:.1f}** upside suggests a significantly higher peak than his current tape shows."
+           # 6. The "Upside" Finisher (Tiered Variance)
+            growth = player.get('Growth_Score', 0)
+        
+            if growth > 12:
+                report += f"Drafting him is a high-reward play—his **+{growth:.1f}** upside suggests a significantly higher peak than his current tape shows."
+            elif growth > 7:
+                report += f"He has a moderate ceiling with a **+{growth:.1f}** projected growth; he should develop into a more impactful player with proper coaching."
+            elif growth >= 3:
+                report += f"With a **+{growth:.1f}** growth curve, he offers some room for improvement, but he is largely seen as a safe, predictable prospect."
             else:
-                report += "He is a 'plug-and-play' option whose value lies in his immediate polish and established basketball IQ."
+                report += f"Scouts believe he is already playing near his physical peak (**+{growth:.1f}** growth); what you see now is likely the finished product."
 
             return report
 
-        except Exception as e:
-            # This is the "except" block Python was looking for!
+    exc    ept Exception as e:
             return f"Scouting report unavailable: {str(e)}"
 
     # --- START UI RENDERING ---
@@ -684,6 +689,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
