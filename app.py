@@ -109,90 +109,90 @@ project_board = filtered_stats.sort_values(by='Growth_Score', ascending=False).h
 
 for i, row in project_board.iterrows():
     if st.sidebar.button(f"{row['Full_Name']} (+{row['Growth_Score']:.1f})", key=f"side_{row['Full_Name']}"):
-        st.session_state.selected_player = row['Full_Name']
-        st.rerun()
-
-# --- TABBED NAVIGATION ---
-tab1, tab2, tab3, tab4 = st.tabs([
-    "👤 Individual Prospect Scout", 
-    "🎯 Advanced Player Finder", 
-    "📋 Draft War Room", 
-    "📈 Strategy & Analysis"
-])
-
-with tab1:
+        st.session_state.selected_player = row['Full_Name']with tab1:
     player_list = list(filtered_stats['Full_Name'].unique())
     
-    # This index logic is what makes the "teleportation" work
-    current_idx = player_list.index(st.session_state.selected_player) if st.session_state.selected_player in player_list else 0
+    # 1. Sync session state with the list
+    if 'selected_player' not in st.session_state or st.session_state.selected_player not in player_list:
+        st.session_state.selected_player = player_list[0]
     
+    # 2. Get the row number for the dropdown
+    default_index = player_list.index(st.session_state.selected_player)
+
+    # 3. The Dropdown Menu
     selected_player = st.selectbox(
         "Select Primary Prospect", 
         player_list, 
-        index=current_idx
+        index=default_index
     )
-    # Sync back in case they change it manually in Tab 1
+    
+    # Update state if the user manually clicks the dropdown
     st.session_state.selected_player = selected_player
+
+    # --- CRITICAL FIX: DEFINE p_data HERE ---
+    p_data = filtered_stats[filtered_stats['Full_Name'] == selected_player].iloc[0]
 
     # --- ADVANCED SCOUTING REPORT FUNCTION ---
     def generate_scout_report(player, df_context):
-        avg = df_context.mean(numeric_only=True)
-        high_traits = [stat for stat in ['SCR', 'DEF', 'PAS', 'IQ', 'BLK', 'STL', 'ORB'] 
-                       if stat in player and player[stat] > avg[stat] + 8]
-        
-        archetype = "Well-Rounded Prospect"
-        if player.get('SCR', 0) >= 65 and player.get('FG_ATB', 0) > 38:
-            archetype = "Dynamic Perimeter Scorer"
-        elif player.get('DEF', 0) >= 65 and (player.get('BLK', 0) > 55 or player.get('STL', 0) > 60):
-            archetype = "High-Impact Defensive Specialist"
-        elif player.get('PAS', 0) >= 70 and player.get('IQ', 0) >= 70:
-            archetype = "High-IQ Playmaker"
-        elif player.get('ORB', 0) >= 70 or player.get('BLK', 0) >= 55:
-            archetype = "Interior Anchor"
+        # We use a try/except here just in case a numeric column is missing
+        try:
+            avg = df_context.mean(numeric_only=True)
+            high_traits = [stat for stat in ['SCR', 'DEF', 'PAS', 'IQ', 'BLK', 'STL', 'ORB'] 
+                           if stat in player and player[stat] > avg[stat] + 8]
+            
+            archetype = "Well-Rounded Prospect"
+            if player.get('SCR', 0) >= 65 and player.get('FG_ATB', 0) > 38:
+                archetype = "Dynamic Perimeter Scorer"
+            elif player.get('DEF', 0) >= 65 and (player.get('BLK', 0) > 55 or player.get('STL', 0) > 60):
+                archetype = "High-Impact Defensive Specialist"
+            elif player.get('PAS', 0) >= 70 and player.get('IQ', 0) >= 70:
+                archetype = "High-IQ Playmaker"
+            elif player.get('ORB', 0) >= 70 or player.get('BLK', 0) >= 55:
+                archetype = "Interior Anchor"
 
-        if player.get('SCR', 0) >= 70 and player.get('DEF', 0) >= 70:
-            archetype = "Elite Two-Way Threat"
+            if player.get('SCR', 0) >= 70 and player.get('DEF', 0) >= 70:
+                archetype = "Elite Two-Way Threat"
 
-        habits = []
-        if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses and find the open man")
-        if player.get('CS', 0) > 10: habits.append("finding space as a catch-and-shoot threat")
-        if player.get('PostUp', 0) > 8: habits.append("using their size in the low post")
-        if player.get('DriveShot', 0) > 8: habits.append("attacking the paint looking to finish at the rim")
-        if player.get('PASS', 0) > 80: habits.append("dishing it out rather than shooting")
-        
-        habit_str = f" often seen {habits[0]}" if habits else " playing within the flow of the offense"
+            habits = []
+            if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses and find the open man")
+            if player.get('CS', 0) > 10: habits.append("finding space as a catch-and-shoot threat")
+            if player.get('PostUp', 0) > 8: habits.append("using their size in the low post")
+            if player.get('DriveShot', 0) > 8: habits.append("attacking the paint looking to finish at the rim")
+            
+            habit_str = f" often seen {habits[0]}" if habits else " playing within the flow of the offense"
 
-        shot_note = ""
-        if player.get('FG_COR', 0) > 38:
-            shot_note = "He is particularly dangerous from the corners,"
-        elif player.get('FG_RA', 0) > 60:
-            shot_note = "He is an elite finisher at the rim,"
-        elif player.get('FG_ATB', 0) > 38:
-            shot_note = "He is an above average shooter from above the break,"
-        elif player.get('FT', 0) > 80:
-            shot_note = "He has been shooting over 80% from the free throw line in college,"
-        
-        growth_diff = player['Growth_Score'] - avg['Growth_Score']
-        if growth_diff > 5:
-            upside_type = "is a 'high-ceiling' project that scouts are buzzing about"
-        elif growth_diff < -5:
-            upside_type = "is one of the most 'pro-ready' players in the class, though his room for growth is smaller"
-        else:
-            upside_type = "shows a steady developmental curve"
+            shot_note = ""
+            if player.get('FG_COR', 0) > 38:
+                shot_note = "He is particularly dangerous from the corners,"
+            elif player.get('FG_RA', 0) > 60:
+                shot_note = "He is an elite finisher at the rim,"
+            elif player.get('FG_ATB', 0) > 38:
+                shot_note = "He is an above average shooter from above the break,"
+            elif player.get('FT', 0) > 80:
+                shot_note = "He has been shooting over 80% from the free throw line in college,"
+            
+            growth_diff = player['Growth_Score'] - avg['Growth_Score']
+            if growth_diff > 5:
+                upside_type = "is a 'high-ceiling' project that scouts are buzzing about"
+            elif growth_diff < -5:
+                upside_type = "is one of the most 'pro-ready' players in the class, though his room for growth is smaller"
+            else:
+                upside_type = "shows a steady developmental curve"
 
-        return (
-            f"**{player['Full_Name']}** projects as a **{archetype}** who {upside_type}. "
-            f"Compared to the {selected_year} class average, his {', '.join(high_traits) if high_traits else 'fundamentals'} "
-            f"stand out immediately. You'll find him{habit_str}. {shot_note} "
-            f"while his long-term success will depend on reaching that **{player['Overall_Pot']:.1f}** ceiling."
-        )
+            return (
+                f"**{player['Full_Name']}** projects as a **{archetype}** who {upside_type}. "
+                f"Compared to the {selected_year} class average, his {', '.join(high_traits) if high_traits else 'fundamentals'} "
+                f"stand out immediately. You'll find him{habit_str}. {shot_note} "
+                f"while his long-term success will depend on reaching that **{player['Overall_Pot']:.1f}** ceiling."
+            )
+        except:
+            return "Scouting report unavailable for this prospect."
 
-       # --- REORDERED INDIVIDUAL VIEW ---
-    
-    # 1. Player Name
+    # --- START UI RENDERING ---
+    # Now that p_data is defined, these lines will no longer error
     st.markdown(f"## {selected_player} | Class of {p_data.get(year_col, 'N/A')}")
     
-    # 2. Bio Metrics (Moved below name)
+    # Bio Metrics
     c1, c2, c3, c4, c5 = st.columns(5)
     if 'Pos' in p_data: c1.metric("Position", p_data['Pos'])
     if 'AGE' in p_data: c2.metric("Age", str(int(float(p_data['AGE']))))
@@ -202,11 +202,11 @@ with tab1:
 
     st.divider()
 
-    # 3. Scouting Director's Executive Summary
+    # Executive Summary
     with st.expander("📝 Scouting Director's Executive Summary", expanded=True):
         st.write(generate_scout_report(p_data, filtered_stats))
 
-    # 4. Scouting Intelligence (Ranking Logic)
+    # Scouting Intelligence (Ranking Logic)
     pos_peers = filtered_stats[filtered_stats['Pos'] == p_data['Pos']].copy()
     total_in_pos = len(pos_peers)
     total_in_class = len(filtered_stats)
@@ -258,7 +258,6 @@ with tab1:
     st.divider()
 
     # --- MIDDLE UI: GRAPHS ---
-    # We removed the second column so the graphs use the full width
     col_a, col_b = st.columns(2)
     with col_a:
         fig_main = go.Figure()
@@ -276,7 +275,7 @@ with tab1:
         fig_shoot.update_layout(title="Shooting Development", barmode='overlay', yaxis=dict(range=[0, 100]), height=350, margin=dict(l=20,r=20,t=40,b=20))
         st.plotly_chart(fig_shoot, use_container_width=True)
 
-    # --- BOTTOM UI: HABITS & COMPARISON ---
+    # --- BOTTOM UI: HABITS ---
     st.divider()
     st.subheader("📌 Tendencies & Floor Habits")
     h_col1, h_col2, h_col3 = st.columns([1, 1, 1.5])
@@ -304,54 +303,29 @@ with tab1:
             fig_freq.update_layout(title="Finishing Profile", xaxis=dict(range=[0, 100]), height=250, margin=dict(l=150, r=20, t=40, b=20), yaxis=dict(autorange="reversed"))
             st.plotly_chart(fig_freq, use_container_width=True)
 
+    # --- COMPARISON TOOL (Keep inside Tab 1) ---
     st.divider()
     st.header("⚔️ Prospect Comparison Tool")
     comp_player = st.selectbox("Select Player to Compare", ["None"] + list(player_stats['Full_Name'].unique()))
 
     if comp_player != "None":
         c_data = player_stats[player_stats['Full_Name'] == comp_player].iloc[0]
-        
-        # --- ROW 1: CORE STATS COMPARISON ---
         st.write("### 📊 Core Skills Comparison")
         r1c1, r1c2 = st.columns(2)
         with r1c1:
             st.write("**Current Ability**")
             f1 = go.Figure()
-            f1.add_trace(go.Bar(x=core_stats, y=p_data[core_stats].values, name=selected_player, marker_color='#1E90FF')) # Dodger Blue
-            f1.add_trace(go.Bar(x=core_stats, y=c_data[core_stats].values, name=comp_player, marker_color='#B22222')) # Firebrick
+            f1.add_trace(go.Bar(x=core_stats, y=p_data[core_stats].values, name=selected_player, marker_color='#1E90FF'))
+            f1.add_trace(go.Bar(x=core_stats, y=c_data[core_stats].values, name=comp_player, marker_color='#B22222'))
             f1.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
             st.plotly_chart(f1, use_container_width=True)
         with r1c2:
             st.write("**Future Potential**")
             f2 = go.Figure()
-            f2.add_trace(go.Bar(x=core_stats, y=p_data[pot_stats].values, name=selected_player, marker_color='#00BFFF')) # Deep Sky Blue
-            f2.add_trace(go.Bar(x=core_stats, y=c_data[pot_stats].values, name=comp_player, marker_color='#DC143C')) # Crimson
+            f2.add_trace(go.Bar(x=core_stats, y=p_data[pot_stats].values, name=selected_player, marker_color='#00BFFF'))
+            f2.add_trace(go.Bar(x=core_stats, y=c_data[pot_stats].values, name=comp_player, marker_color='#DC143C'))
             f2.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
             st.plotly_chart(f2, use_container_width=True)
-
-        # --- ROW 2: SHOOTING STATS COMPARISON ---
-        st.write("### 🎯 Shooting Profile Comparison")
-        r2c1, r2c2 = st.columns(2)
-        
-        available_shoot = [s for s in shoot_stats if s in p_data.index and s in c_data.index]
-        available_shoot_pot = [s + '_POT' for s in available_shoot if s + '_POT' in p_data.index]
-        shoot_labels = [s.replace('FG_', '') for s in available_shoot]
-
-        with r2c1:
-            st.write("**Current Shooting**")
-            f3 = go.Figure()
-            f3.add_trace(go.Bar(x=shoot_labels, y=p_data[available_shoot].values, name=selected_player, marker_color='#FF8C00')) # Dark Orange
-            f3.add_trace(go.Bar(x=shoot_labels, y=c_data[available_shoot].values, name=comp_player, marker_color='#8B0000')) # Dark Red
-            f3.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
-            st.plotly_chart(f3, use_container_width=True)
-
-        with r2c2:
-            st.write("**Potential Shooting**")
-            f4 = go.Figure()
-            f4.add_trace(go.Bar(x=shoot_labels, y=p_data[available_shoot_pot].values, name=selected_player, marker_color='#FFD700')) # Gold
-            f4.add_trace(go.Bar(x=shoot_labels, y=c_data[available_shoot_pot].values, name=comp_player, marker_color='#FF4500')) # Orange Red
-            f4.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
-            st.plotly_chart(f4, use_container_width=True)
 with tab2:
     st.header("🎯 Advanced Player Finder")
     
@@ -522,6 +496,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
