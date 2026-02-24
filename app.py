@@ -4,90 +4,52 @@ import plotly.graph_objects as go
 import plotly.express as px
 
 st.set_page_config(page_title="CSL Scoutwire", layout="wide")
-st.title("🏀 CSL ScoutWire")
 
 # --- SESSION STATE INITIALIZATION ---
 if 'selected_player' not in st.session_state:
     st.session_state.selected_player = None
 
-# Function to handle clicking a player name
 def select_player(name):
     st.session_state.selected_player = name
 
-# --- AESTHETIC LEAGUE LANDING PAGE (CLEAN FLOW) ---
-st.markdown("""
-    <style>
-    /* Background and Global Font */
-    .stApp { 
-        background-color: #F8FAFC; 
-    }
-    /* Typography Styling */
-    .league-title {
-        color: #1E293B;
-        font-family: 'Inter', 'Helvetica Neue', sans-serif;
-        font-weight: 800;
-        letter-spacing: -1px;
-        margin-bottom: 0px;
-        text-align: center;
-    }
-    .league-subtitle {
-        color: #D4AF37;
-        font-size: 1rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 4px;
-        margin-bottom: 20px;
-        text-align: center;
-    }
-    .instruction {
-        color: #64748B;
-        font-size: 1.1rem;
-        text-align: center;
-        margin-bottom: 30px;
-    }
-    /* Custom Trophy Circle */
-    .trophy-icon {
-        font-size: 50px;
-        background: white;
-        border: 4px solid #D4AF37;
-        width: 100px;
-        height: 100px;
-        line-height: 90px;
-        border-radius: 50%;
-        margin: 0 auto 30px auto;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    </style>
-""", unsafe_allow_html=True)
+# --- INITIAL FILE CHECK ---
+# We use a placeholder here to check if the user has uploaded anything
+uploaded_files = st.file_uploader("Upload CSVs", accept_multiple_files=True, type=['csv'], key="main_loader", label_visibility="collapsed")
 
-# 1. League Branding Header
-col1, col2, col3 = st.columns([1, 2, 1])
-
-with col2:
-    # Header Section
-    st.markdown("<h1 class='league-title'>CHAMPION SIM LEAGUE</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='league-subtitle'>CSL Scouting Tool</p>", unsafe_allow_html=True)
-    
-    # Visual Separator
-    st.markdown("<hr style='border: 2px solid #D4AF37; width: 40%; margin: 20px auto;'>", unsafe_allow_html=True)
-    
-    # 2. Icon and Instruction
-    st.markdown('<div class="trophy-icon">🏆</div>', unsafe_allow_html=True)
-    st.markdown("<p class='instruction'>Please upload league-standard scouting CSVs from CSLO to populate your draft data.</p>", unsafe_allow_html=True)
-
-    # 3. The File Uploader (Centered via the column)
-    uploaded_files = st.file_uploader("", accept_multiple_files=True, type=['csv'])
-
-    # 4. Footer info
-    st.markdown("<p style='color: #94A3B8; font-size: 0.8rem; text-align: center; margin-top: 40px; font-weight: bold;'>VERSION 1.0</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #CBD5E1; font-size: 0.7rem; text-align: center;'>Internal data for CSL GMs only.</p>", unsafe_allow_html=True)
-
-# 5. Stop execution until files are uploaded
 if not uploaded_files:
-    st.stop()
+    # --- EVERYTHING IN THIS BLOCK DISAPPEARS AFTER UPLOAD ---
+    st.markdown("""
+        <style>
+        .stApp { background-color: #F8FAFC; }
+        .league-title { color: #1E293B; font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: -1px; text-align: center; }
+        .league-subtitle { color: #D4AF37; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 4px; text-align: center; }
+        .instruction { color: #64748B; font-size: 1.1rem; text-align: center; margin-bottom: 30px; }
+        .trophy-icon { font-size: 50px; background: white; border: 4px solid #D4AF37; width: 100px; height: 100px; line-height: 90px; border-radius: 50%; margin: 0 auto 30px auto; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        </style>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        st.markdown("<h1 class='league-title'>CHAMPION SIM LEAGUE</h1>", unsafe_allow_html=True)
+        st.markdown("<p class='league-subtitle'>CSL Scouting Tool</p>", unsafe_allow_html=True)
+        st.markdown("<hr style='border: 2px solid #D4AF37; width: 40%; margin: 20px auto;'>", unsafe_allow_html=True)
+        st.markdown('<div class="trophy-icon">🏆</div>', unsafe_allow_html=True)
+        st.markdown("<p class='instruction'>Please upload league-standard scouting CSVs from CSLO to populate your draft data.</p>", unsafe_allow_html=True)
+
+        # We call the visible uploader here. 
+        # By giving it the same 'key', it stays in sync with the one at the top.
+        uploaded_files = st.file_uploader("Select Scouting Files", accept_multiple_files=True, type=['csv'], key="landing_loader")
+
+        st.markdown("<p style='color: #94A3B8; font-size: 0.8rem; text-align: center; margin-top: 40px; font-weight: bold;'>VERSION 1.0</p>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #CBD5E1; font-size: 0.7rem; text-align: center;'>Internal data for CSL GMs only.</p>", unsafe_allow_html=True)
+
+    st.stop() # This is the magic line. It stops the app right here until files are uploaded.
+
+# --- EVERYTHING BELOW THIS ONLY RUNS AFTER UPLOAD ---
+st.title("🏀 CSL ScoutWire") 
+
+# Rest of your code (Tabs, Data Processing, Janes' reports, etc.) starts here...
     
 # --- DATA PROCESSING ---
 try:
@@ -636,6 +598,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
