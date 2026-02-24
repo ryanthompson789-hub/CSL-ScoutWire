@@ -431,36 +431,29 @@ with tab2:
         (filtered_stats['FT' + suffix] >= min_ft)
     ]
 
-   # --- 5. RESULTS DISPLAY ---
+  # --- 5. RESULTS DISPLAY ---
     st.subheader(f"🔍 Matches Found: {len(query_df)}")
     
     if not query_df.empty:
-        # Define the full set of columns to mirror the Draft War Room style
-        # We pair them up: Current followed by Potential for every major category
-        display_columns = [
-            'Full_Name', 'Pos', 'Overall_Pot',
-            'SCR', 'SCR_POT',
-            'PAS', 'PAS_POT',
-            'HDL', 'HDL_POT',
-            'DRFL', 'DRFL_POT',
-            'IQ', 'IQ_POT',
-            'DEF', 'DEF_POT',
-            'DIS', 'DIS_POT',
-            'BLK', 'BLK_POT',
-            'STL', 'STL_POT',
-            'FG_RA', 'FG_RA_POT',
-            'FG_ITP', 'FG_ITP_POT',
-            'FG_MID', 'FG_MID_POT',
-            'FG_COR', 'FG_COR_POT',
-            'FG_ATB', 'FG_ATB_POT',
-            'FT', 'FT_POT'
+        # Define the core columns that stay no matter what
+        base_cols = ['Full_Name', 'Pos', 'Overall_Pot']
+        
+        # Define the ratings we want to show
+        # These will automatically add "_POT" if the Potential Lens is selected
+        ratings_to_show = [
+            'SCR', 'PAS', 'HDL', 'DRFL', 'IQ', 
+            'DEF', 'DIS', 'BLK', 'STL', 'ORB', 'DRB',
+            'FG_RA', 'FG_ITP', 'FG_MID', 'FG_COR', 'FG_ATB', 'FT'
         ]
         
-        # Filter the display list to only include columns that actually exist in your dataframe
-        existing_display_cols = [c for c in display_columns if c in query_df.columns]
+        # Combine base columns with the dynamic ratings (applying the suffix)
+        display_columns = base_cols + [r + suffix for r in ratings_to_show]
+        
+        # Safety check: ensure the columns exist in the data
+        existing_cols = [c for c in display_columns if c in query_df.columns]
         
         st.dataframe(
-            query_df[existing_display_cols].sort_values('Overall_Pot', ascending=False), 
+            query_df[existing_cols].sort_values('Overall_Pot', ascending=False), 
             use_container_width=True
         )
 
@@ -566,6 +559,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
