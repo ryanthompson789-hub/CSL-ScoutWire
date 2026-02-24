@@ -226,7 +226,7 @@ with tab1:
             # 5. Narrative Construction
             report = (
                 f"**Scouting Director's Note:** {player['Full_Name']} projects as a **{archetype}**. "
-                f"His current toolkit shows {player.get('SCR', 0):.0f} scoring and {player.get('DEF', 0):.0f} defensive impact. "
+                f"His current toolkit shows {player.get('SCR', 0):.0f} scoring and {player.get('DEF', 0):.0f} defense. "
                 f"{context_note} "
             )
 
@@ -680,6 +680,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
