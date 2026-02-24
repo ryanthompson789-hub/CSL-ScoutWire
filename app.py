@@ -68,22 +68,22 @@ col1, col2, col3 = st.columns([1, 2, 1])
 
 with col2:
     # Header Section
-    st.markdown("<h1 class='league-title'>CHAMPION SIMULATION LEAGUE</h1>", unsafe_allow_html=True)
-    st.markdown("<p class='league-subtitle'>Scouting & Personnel Terminal</p>", unsafe_allow_html=True)
+    st.markdown("<h1 class='league-title'>CHAMPION SIM LEAGUE</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='league-subtitle'>CSL Scouting Tool</p>", unsafe_allow_html=True)
     
     # Visual Separator
     st.markdown("<hr style='border: 2px solid #D4AF37; width: 40%; margin: 20px auto;'>", unsafe_allow_html=True)
     
     # 2. Icon and Instruction
     st.markdown('<div class="trophy-icon">🏆</div>', unsafe_allow_html=True)
-    st.markdown("<p class='instruction'>Please upload league-standard scouting CSVs to populate the draft board.</p>", unsafe_allow_html=True)
+    st.markdown("<p class='instruction'>Please upload league-standard scouting CSVs from CSLO to populate your draft data.</p>", unsafe_allow_html=True)
 
     # 3. The File Uploader (Centered via the column)
     uploaded_files = st.file_uploader("", accept_multiple_files=True, type=['csv'])
 
     # 4. Footer info
-    st.markdown("<p style='color: #94A3B8; font-size: 0.8rem; text-align: center; margin-top: 40px; font-weight: bold;'>CONNECTION ENCRYPTED • VERSION 2.6</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color: #CBD5E1; font-size: 0.7rem; text-align: center;'>Unauthorized access is restricted. Internal data for CSL GMs only.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #94A3B8; font-size: 0.8rem; text-align: center; margin-top: 40px; font-weight: bold;'>VERSION 1.0</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #CBD5E1; font-size: 0.7rem; text-align: center;'>Internal data for CSL GMs only.</p>", unsafe_allow_html=True)
 
 # 5. Stop execution until files are uploaded
 if not uploaded_files:
@@ -636,6 +636,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
