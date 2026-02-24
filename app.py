@@ -466,14 +466,22 @@ with tab2:
         st.write("### 🚀 Launch Report")
         target_player = st.selectbox("Select Prospect to View in Tab 1", query_df['Full_Name'].unique())
         
-        st.button(
+        if st.button(
             f"View Full Report for {target_player}", 
-            on_click=lambda: st.session_state.update({"selected_player": target_player}),
             use_container_width=True,
             type="primary"
-        )
-    else:
-        st.warning("No prospects meet all criteria. Try easing up on the sliders.")
+        ):
+            # 1. Update the session state (the "Teleport" logic)
+            st.session_state.update({"selected_player": target_player})
+            
+            # 2. Trigger the "Pop-up" style notification
+            st.toast(f"✅ Report for {target_player} loaded!", icon="🚀")
+            
+            # 3. Add a clear visual success box
+            st.success(f"**Action Complete!** {target_player}'s scouting profile is now live in the **Individual Prospect Scout** tab above. ⬆️")
+            
+            # 4. Optional: Balloon celebration (fun for high-potential finds!)
+            st.balloons()
         
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -562,6 +570,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
