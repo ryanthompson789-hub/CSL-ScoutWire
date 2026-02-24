@@ -141,7 +141,12 @@ for i, row in project_board.iterrows():
     if st.sidebar.button(f"{row['Full_Name']} (+{row['Growth_Score']:.1f})", key=f"side_{row['Full_Name']}"):
         st.session_state.selected_player = row['Full_Name']
         st.rerun()
-        
+
+if 'teleport_success' in st.session_state:
+    st.success(f"✅ **Report Loaded:** {st.session_state.teleport_success} is ready in the 'Individual Prospect Scout' tab.")
+    # We delete it immediately so the message doesn't pop up again on the next click
+    del st.session_state.teleport_success
+    
 # --- MAIN APP ---
 tab1, tab2, tab3, tab4 = st.tabs([
     "👤 Individual Prospect Scout", 
@@ -497,7 +502,7 @@ with tab2:
 
         st.divider()
         
-        # --- THE TELEPORT BUTTON (STAY-ALIVE FIX) ---
+        # --- THE TELEPORT BUTTON (RE-RUN PERSISTENCE FIX) ---
         st.write("### 🚀 Launch Report")
         target_player = st.selectbox("Select Prospect to View in Tab 1", query_df['Full_Name'].unique())
         
@@ -506,12 +511,11 @@ with tab2:
             use_container_width=True,
             type="primary"
         ):
-            # 1. Update the session state
+            # 1. Update the session state so Tab 1 knows who to show
             st.session_state.selected_player = target_player
             
-            # 2. TRIGGER THE TOAST BEFORE THE RERUN
-            # We use a slight delay or a specific icon to make it grab attention
-            st.toast(f"✅ Loaded {target_player}. Switch to 'Individual Prospect Scout' tab!", icon="🏀")
+            # 2. Set the "Flag" that we will check for after the rerun
+            st.session_state.teleport_success = target_player
             
             # 3. REFRESH
             st.rerun()
@@ -603,6 +607,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
