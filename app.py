@@ -335,6 +335,29 @@ with tab1:
             f2.add_trace(go.Bar(x=core_stats, y=c_data[pot_stats].values, name=comp_player, marker_color='#DC143C'))
             f2.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
             st.plotly_chart(f2, use_container_width=True)
+
+        st.write("### 🎯 Shooting Profile Comparison")
+        r2c1, r2c2 = st.columns(2)
+        
+        available_shoot = [s for s in shoot_stats if s in p_data.index and s in c_data.index]
+        available_shoot_pot = [s + '_POT' for s in available_shoot if s + '_POT' in p_data.index]
+        shoot_labels = [s.replace('FG_', '') for s in available_shoot]
+
+        with r2c1:
+            st.write("**Current Shooting**")
+            f3 = go.Figure()
+            f3.add_trace(go.Bar(x=shoot_labels, y=p_data[available_shoot].values, name=selected_player, marker_color='#FF8C00')) # Dark Orange
+            f3.add_trace(go.Bar(x=shoot_labels, y=c_data[available_shoot].values, name=comp_player, marker_color='#8B0000')) # Dark Red
+            f3.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
+            st.plotly_chart(f3, use_container_width=True)
+
+        with r2c2:
+            st.write("**Potential Shooting**")
+            f4 = go.Figure()
+            f4.add_trace(go.Bar(x=shoot_labels, y=p_data[available_shoot_pot].values, name=selected_player, marker_color='#FFD700')) # Gold
+            f4.add_trace(go.Bar(x=shoot_labels, y=c_data[available_shoot_pot].values, name=comp_player, marker_color='#FF4500')) # Orange Red
+            f4.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
+            st.plotly_chart(f4, use_container_width=True)
 with tab2:
     st.header("🎯 Advanced Player Finder")
     
@@ -507,6 +530,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
