@@ -5,48 +5,19 @@ import plotly.express as px
 
 st.set_page_config(page_title="CSL Scoutwire", layout="wide")
 
-# --- 1. SESSION STATE ---
+# --- SESSION STATE INITIALIZATION ---
 if 'selected_player' not in st.session_state:
     st.session_state.selected_player = None
 
-# --- 2. THE FILE CHECK (The "Gatekeeper") ---
-# We check for files first. label_visibility="collapsed" hides the extra uploader inside the app.
-uploaded_files = st.file_uploader("Upload CSVs", accept_multiple_files=True, type=['csv'], key="main_loader", label_visibility="collapsed")
+# Function to handle clicking a player name
+def select_player(name):
+    st.session_state.selected_player = name
+
+uploaded_files = st.file_uploader("Upload Scouting CSVs", accept_multiple_files=True, type=['csv'])
 
 if not uploaded_files:
-    # --- START OF LANDING PAGE: This only shows if no files are uploaded ---
-    st.markdown("""
-        <style>
-        .stApp { background-color: #F8FAFC; }
-        .league-title { color: #1E293B; font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: -1px; text-align: center; }
-        .league-subtitle { color: #D4AF37; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 4px; text-align: center; }
-        .instruction { color: #64748B; font-size: 1.1rem; text-align: center; margin-bottom: 30px; }
-        .trophy-icon { font-size: 50px; background: white; border: 4px solid #D4AF37; width: 100px; height: 100px; line-height: 90px; border-radius: 50%; margin: 0 auto 30px auto; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        </style>
-    """, unsafe_allow_html=True)
-
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("<h1 class='league-title'>CHAMPION SIM LEAGUE</h1>", unsafe_allow_html=True)
-        st.markdown("<p class='league-subtitle'>CSL Scouting Tool</p>", unsafe_allow_html=True)
-        st.markdown("<hr style='border: 2px solid #D4AF37; width: 40%; margin: 20px auto;'>", unsafe_allow_html=True)
-        st.markdown('<div class="trophy-icon">🏆</div>', unsafe_allow_html=True)
-        st.markdown("<p class='instruction'>Please upload league-standard scouting CSVs from CSLO to populate your draft data.</p>", unsafe_allow_html=True)
-
-        # Use the same key so it populates 'uploaded_files' at the top
-        st.file_uploader("Select Scouting Files", accept_multiple_files=True, type=['csv'], key="landing_loader")
-
-        st.markdown("<p style='color: #94A3B8; font-size: 0.8rem; text-align: center; margin-top: 40px; font-weight: bold;'>VERSION 1.0</p>", unsafe_allow_html=True)
-        st.markdown("<p style='color: #CBD5E1; font-size: 0.7rem; text-align: center;'>Internal data for CSL GMs only.</p>", unsafe_allow_html=True)
-    
-    st.stop() # CRITICAL: This stops the app from rendering anything else until files are uploaded.
-    # --- END OF LANDING PAGE ---
-
-# --- 3. THE ACTUAL APP: This only runs AFTER files are uploaded ---
-st.title("🏀 CSL ScoutWire")
-
-# Put your data processing and tab logic here (e.g., st.tabs, pd.concat, etc.)
-# If you are looking at Janes' profile, you'll only see the title and the report now!
+    st.info("👋 Welcome! Please upload your scouting CSVs to begin.")
+    st.stop()
     
 # --- DATA PROCESSING ---
 try:
@@ -595,6 +566,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
