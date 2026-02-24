@@ -207,7 +207,7 @@ with tab1:
             elif is_defender and is_big_man:
                 archetype = "Paint-Protecting Anchor"
             elif is_defender:
-                archetype = "Lockdown Wing Specialist"
+                archetype = "Lockdown Specialist"
             elif is_big_man:
                 archetype = "Interior Physical Presence"
             else:
@@ -680,6 +680,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
