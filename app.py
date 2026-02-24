@@ -358,82 +358,102 @@ with tab1:
             f4.add_trace(go.Bar(x=shoot_labels, y=c_data[available_shoot_pot].values, name=comp_player, marker_color='#FF4500')) # Orange Red
             f4.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
             st.plotly_chart(f4, use_container_width=True)
+
 with tab2:
     st.header("🎯 Advanced Player Finder")
-    st.write("Set your baseline requirements to identify prospects that fit your team's system.")
+    
+    # --- 1. SEARCH LENS ---
+    st.write("### 1. Choose Scouting Lens")
+    stat_mode = st.radio(
+        "Filter based on current ability or projected peak?", 
+        ["Current Ratings", "Potential Ratings"], 
+        horizontal=True
+    )
+    suffix = "_POT" if stat_mode == "Potential Ratings" else ""
+    
+    st.divider()
 
-    # --- ARCHETYPE FILTERS ---
-    col1, col2 = st.columns(2)
+    # --- 2. SKILL THRESHOLDS ---
+    st.write("### 2. Set Skill Thresholds")
+    
+    col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.subheader("⚔️ Offensive Baselines")
-        min_scr = st.slider("Min Scoring (SCR)", 0, 100, 60)
-        min_pas = st.slider("Min Passing (PAS)", 0, 100, 40)
-        min_hdl = st.slider("Min Ball Handling (HDL)", 0, 100, 40)
-        min_iq  = st.slider("Min Basketball IQ", 0, 100, 50)
+        st.markdown("**Core Skills**")
+        min_scr = st.slider("Scoring (SCR)", 0, 100, 0)
+        min_pas = st.slider("Passing (PAS)", 0, 100, 0)
+        min_hdl = st.slider("Handling (HDL)", 0, 100, 0)
+        min_iq  = st.slider("Bball IQ", 0, 100, 0)
 
     with col2:
-        st.subheader("🛡️ Defensive & Physical")
-        min_def = st.slider("Min Defensive Rating (DEF)", 0, 100, 50)
-        min_blk = st.slider("Min Shot Blocking (BLK)", 0, 100, 30)
-        min_stl = st.slider("Min Steal Ability (STL)", 0, 100, 30)
-        min_orb = st.slider("Min Off. Rebounding (ORB)", 0, 100, 30)
+        st.markdown("**Defense & Glass**")
+        min_def = st.slider("Defense (DEF)", 0, 100, 0)
+        min_blk = st.slider("Blocking (BLK)", 0, 100, 0)
+        min_stl = st.slider("Steals (STL)", 0, 100, 0)
+        min_orb = st.slider("Off. Rebs (ORB)", 0, 100, 0)
+        min_drb = st.slider("Def. Rebs (DRB)", 0, 100, 0)
+
+    with col3:
+        st.markdown("**Shooting Profile**")
+        min_ra  = st.slider("At Rim (RA)", 0, 100, 0)
+        min_mid = st.slider("Mid-Range", 0, 100, 0)
+        min_cor = st.slider("Corner 3s", 0, 100, 0)
+        min_atb = st.slider("Above Break 3s", 0, 100, 0)
+        min_ft  = st.slider("Free Throw (FT)", 0, 100, 0)
 
     st.divider()
 
-    # --- POSITION & POTENTIAL FILTERS ---
-    c1, c2, c3 = st.columns([1, 1, 1])
-    with c1:
-        pos_filter = st.multiselect("Filter by Position", options=all_positions, default=all_positions)
-    with c2:
-        min_pot = st.slider("Min Overall Potential", 0, 100, 65)
-    with c3:
-        # Toggle between looking at current stats or their projected ceiling
-        stat_mode = st.radio("Search Mode", ["Current Ratings", "Potential Ratings"], horizontal=True)
+    # --- 3. POSITION FILTER ---
+    pos_filter = st.multiselect("Filter by Position", options=all_positions, default=all_positions)
 
-    # --- QUERY LOGIC ---
-    # Define which columns to check based on the radio button selection
-    suffix = "_POT" if stat_mode == "Potential Ratings" else ""
-    
+    # --- 4. QUERY LOGIC ---
+    # This checks every single slider against the selected "Lens" (Current or Potential)
     query_df = filtered_stats[
         (filtered_stats['Pos'].isin(pos_filter)) &
-        (filtered_stats['Overall_Pot' if suffix == "_POT" else 'Current_Rating'] >= min_pot) &
         (filtered_stats['SCR' + suffix] >= min_scr) &
         (filtered_stats['PAS' + suffix] >= min_pas) &
         (filtered_stats['HDL' + suffix] >= min_hdl) &
-        (filtered_stats['DEF' + suffix] >= min_def) &
         (filtered_stats['IQ' + suffix] >= min_iq) &
+        (filtered_stats['DEF' + suffix] >= min_def) &
         (filtered_stats['BLK' + suffix] >= min_blk) &
         (filtered_stats['STL' + suffix] >= min_stl) &
-        (filtered_stats['ORB' + suffix] >= min_orb)
+        (filtered_stats['ORB' + suffix] >= min_orb) &
+        (filtered_stats['DRB' + suffix] >= min_drb) &
+        (filtered_stats['FG_RA' + suffix] >= min_ra) &
+        (filtered_stats['FG_MID' + suffix] >= min_mid) &
+        (filtered_stats['FG_COR' + suffix] >= min_cor) &
+        (filtered_stats['FG_ATB' + suffix] >= min_atb) &
+        (filtered_stats['FT' + suffix] >= min_ft)
     ]
 
-    # --- RESULTS DISPLAY ---
+    # --- 5. RESULTS DISPLAY ---
     st.subheader(f"🔍 Matches Found: {len(query_df)}")
     
     if not query_df.empty:
-        # Displaying a clean table of results
-        display_cols = ['Full_Name', 'Pos', 'AGE', 'SCR', 'DEF', 'PAS', 'Overall_Pot']
-        st.dataframe(query_df[display_cols].sort_values('Overall_Pot', ascending=False), use_container_width=True)
+        # Show relevant columns based on suffix
+        base_cols = ['Full_Name', 'Pos', 'Overall_Pot']
+        # We dynamically show the ratings the GM is currently filtering by
+        stat_cols = ['SCR'+suffix, 'DEF'+suffix, 'FT'+suffix] 
+        
+        st.dataframe(
+            query_df[base_cols + stat_cols].sort_values('Overall_Pot', ascending=False), 
+            use_container_width=True
+        )
 
         st.divider()
         
         # --- THE TELEPORT BUTTON ---
-        st.write("### 🚀 Rapid Scout")
-        st.caption("Select a player from your search results to launch their full deep-dive scouting report.")
+        st.write("### 🚀 Launch Report")
+        target_player = st.selectbox("Select Prospect to View in Tab 1", query_df['Full_Name'].unique())
         
-        # Dropdown to select from the filtered results
-        target_player = st.selectbox("Select Prospect to Launch", query_df['Full_Name'].unique())
-        
-        # The button that syncs with Tab 1
         st.button(
-            "Launch Scouting Report", 
+            f"View Full Report for {target_player}", 
             on_click=lambda: st.session_state.update({"selected_player": target_player}),
             use_container_width=True,
             type="primary"
         )
     else:
-        st.warning("No prospects match those strict criteria. Try lowering your defensive or physical baselines.")
+        st.warning("No prospects meet all these criteria. Try easing up on one of the shooting or defensive sliders.")
 
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -522,6 +542,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
