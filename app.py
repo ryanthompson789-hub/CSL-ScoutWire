@@ -182,67 +182,67 @@ with tab1:
     p_data = filtered_stats[filtered_stats['Full_Name'] == selected_player].iloc[0]
 
     def generate_scout_report(player, df_context):
-    try:
-        # 1. Define Universal "Pro-Level" Benchmarks
-        PLUS = 65
-        SOLID = 55
+        try:
+            # 1. Define Universal "Pro-Level" Benchmarks
+            PLUS = 65
+            SOLID = 55
 
-        # 2. Identify Core Identities
-        is_scorer = player.get('SCR', 0) >= PLUS or player.get('FG_ATB', 0) >= 38
-        is_playmaker = player.get('PAS', 0) >= PLUS and player.get('IQ', 0) >= PLUS
-        is_defender = player.get('DEF', 0) >= PLUS
-        is_big_man = (player.get('ORB', 0) >= PLUS) or (player.get('BLK', 0) >= 55)
+            # 2. Identify Core Identities
+            is_scorer = player.get('SCR', 0) >= PLUS or player.get('FG_ATB', 0) >= 38
+            is_playmaker = player.get('PAS', 0) >= PLUS and player.get('IQ', 0) >= PLUS
+            is_defender = player.get('DEF', 0) >= PLUS
+            is_big_man = (player.get('ORB', 0) >= PLUS) or (player.get('BLK', 0) >= 55)
         
-        # 3. Determine Archetype
-        if is_scorer and is_defender:
-            archetype = "Elite Two-Way Prospect"
-        elif is_playmaker and is_scorer:
-            archetype = "Dynamic Offensive Engine"
-        elif is_playmaker:
-            archetype = "High-IQ Floor General"
-        elif is_scorer:
-            archetype = "Natural Three-Level Scorer"
-        elif is_defender and is_big_man:
-            archetype = "Paint-Protecting Anchor"
-        elif is_defender:
-            archetype = "Lockdown Wing Specialist"
-        elif is_big_man:
-            archetype = "Interior Physical Presence"
-        else:
-            archetype = "Raw Developmental Project"
+            # 3. Determine Archetype
+            if is_scorer and is_defender:
+                archetype = "Elite Two-Way Prospect"
+            elif is_playmaker and is_scorer:
+                archetype = "Dynamic Offensive Engine"
+            elif is_playmaker:
+                archetype = "High-IQ Floor General"
+            elif is_scorer:
+                archetype = "Natural Three-Level Scorer"
+            elif is_defender and is_big_man:
+                archetype = "Paint-Protecting Anchor"
+            elif is_defender:
+                archetype = "Lockdown Wing Specialist"
+            elif is_big_man:
+                archetype = "Interior Physical Presence"
+            else:
+                archetype = "Raw Developmental Project"
 
-        # 4. Contextual Dual-Ranking
-        sample_size = len(df_context)
-        if sample_size > 10:
-            # We use player.name which is the Full_Name in the grouped dataframe
-            pot_rank = int(df_context['Overall_Pot'].rank(ascending=False, method='min').iloc[df_context.index.get_loc(player.name)])
-            cur_rank = int(df_context['Current_Rating'].rank(ascending=False, method='min').iloc[df_context.index.get_loc(player.name)])
+            # 4. Contextual Dual-Ranking
+            sample_size = len(df_context)
+            if sample_size > 10:
+                # We use player.name which is the Full_Name in the grouped dataframe
+                pot_rank = int(df_context['Overall_Pot'].rank(ascending=False, method='min').iloc[df_context.index.get_loc(player.name)])
+                cur_rank = int(df_context['Current_Rating'].rank(ascending=False, method='min').iloc[df_context.index.get_loc(player.name)])
             
-            context_note = (
-                f"Within this class of {sample_size}, he ranks **#{cur_rank} in Immediate Readiness** "
-                f"and **#{pot_rank} in Long-Term Ceiling**."
+                context_note = (
+                    f"Within this class of {sample_size}, he ranks **#{cur_rank} in Immediate Readiness** "
+                    f"and **#{pot_rank} in Long-Term Ceiling**."
+                )
+            else:
+                context_note = "Evaluation based on independent pro-style benchmarks (Limited class data available)."
+
+            # 5. Narrative Construction
+            report = (
+                f"**Scouting Director's Note:** {player['Full_Name']} projects as a **{archetype}**. "
+                f"His current toolkit is defined by {player.get('SCR', 0):.0f} scoring and {player.get('DEF', 0):.0f} defensive impact. "
+                f"{context_note} "
             )
-        else:
-            context_note = "Evaluation based on independent pro-style benchmarks (Limited class data available)."
 
-        # 5. Narrative Construction
-        report = (
-            f"**Scouting Director's Note:** {player['Full_Name']} projects as a **{archetype}**. "
-            f"His current toolkit is defined by {player.get('SCR', 0):.0f} scoring and {player.get('DEF', 0):.0f} defensive impact. "
-            f"{context_note} "
-        )
+            # 6. The "Upside" finisher
+            if player['Growth_Score'] > 12:
+                report += f"Drafting him is a high-reward play—his **+{player['Growth_Score']:.1f}** upside suggests a significantly higher peak than his current tape shows."
+            else:
+                report += "He is a 'plug-and-play' option whose value lies in his immediate polish and established basketball IQ."
 
-        # 6. The "Upside" finisher
-        if player['Growth_Score'] > 12:
-            report += f"Drafting him is a high-reward play—his **+{player['Growth_Score']:.1f}** upside suggests a significantly higher peak than his current tape shows."
-        else:
-            report += "He is a 'plug-and-play' option whose value lies in his immediate polish and established basketball IQ."
+            return report
 
-        return report
-
-    except Exception as e:
-        # This is the "except" block Python was looking for!
-        return f"Scouting report unavailable: {str(e)}"
+        except Exception as e:
+            # This is the "except" block Python was looking for!
+            return f"Scouting report unavailable: {str(e)}"
 
     # --- START UI RENDERING ---
     # Now that p_data is defined, these lines will no longer error
@@ -684,6 +684,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
