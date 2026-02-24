@@ -497,7 +497,7 @@ with tab2:
 
         st.divider()
         
-       # --- THE TELEPORT BUTTON (FIXED) ---
+        # --- THE TELEPORT BUTTON (STAY-ALIVE FIX) ---
         st.write("### 🚀 Launch Report")
         target_player = st.selectbox("Select Prospect to View in Tab 1", query_df['Full_Name'].unique())
         
@@ -506,15 +506,14 @@ with tab2:
             use_container_width=True,
             type="primary"
         ):
-            # 1. Update the session state (matching Tab 1's logic)
+            # 1. Update the session state
             st.session_state.selected_player = target_player
             
-            # 2. Trigger the notification
-            st.toast(f"Report for {target_player} loaded.", icon="📋")
+            # 2. TRIGGER THE TOAST BEFORE THE RERUN
+            # We use a slight delay or a specific icon to make it grab attention
+            st.toast(f"✅ Loaded {target_player}. Switch to 'Individual Prospect Scout' tab!", icon="🏀")
             
-            # 3. SUCCESS MESSAGE & REFRESH
-            # The st.rerun() ensures Tab 1 sees the change immediately
-            st.success(f"**Success!** {target_player}'s profile is ready. Click the **Individual Prospect Scout** tab above! ⬆️")
+            # 3. REFRESH
             st.rerun()
         
 with tab3:
@@ -604,6 +603,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
