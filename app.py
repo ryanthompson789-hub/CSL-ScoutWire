@@ -399,75 +399,75 @@ with tab1:
             f4.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
             st.plotly_chart(f4, use_container_width=True)
 
-# --- DRAFT SIMILAR (FULL DNA VERSION) ---
-st.divider()
-st.header("🧬 Similar Prospect Profiles")
-st.caption("These players share the most similar ratings.")
+    # --- DRAFT SIMILAR (FULL DNA VERSION) ---
+    st.divider()
+    st.header("🧬 Similar Prospect Profiles")
+    st.caption("These players share the most similar ratings.")
 
-# 1. Expanded DNA including the shooting profile
-identity_stats = [
-    'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'DEF', 'STL', 'BLK', 'IQ', 
-    'FG_RA', 'FG_ITP', 'FG_MID', 'FG_COR', 'FG_ATB', 'FT'
-]
+    # 1. Expanded DNA including the shooting profile
+    identity_stats = [
+        'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'DEF', 'STL', 'BLK', 'IQ', 
+        'FG_RA', 'FG_ITP', 'FG_MID', 'FG_COR', 'FG_ATB', 'FT'
+    ]
 
-# Ensure we only use stats that actually exist in the data to avoid errors
-existing_identity = [s for s in identity_stats if s in filtered_stats.columns]
+    # Ensure we only use stats that actually exist in the data to avoid errors
+    existing_identity = [s for s in identity_stats if s in filtered_stats.columns]
 
-# 2. Calculate the "Distance" using a more sensitive penalty
-comparison_df = filtered_stats.copy()
-comparison_df = comparison_df[comparison_df['Full_Name'] != selected_player]
+    # 2. Calculate the "Distance" using a more sensitive penalty
+    comparison_df = filtered_stats.copy()
+    comparison_df = comparison_df[comparison_df['Full_Name'] != selected_player]
 
-# Calculate the mean difference across identity stats
-# We use a 'Squared Difference' (Euclidean) to punish outliers more heavily
-def calculate_match(row, target_stats):
-    # Sum of absolute differences
-    diff = sum(abs(row[existing_identity] - target_stats[existing_identity]))
+    # Calculate the mean difference across identity stats
+    # We use a 'Squared Difference' (Euclidean) to punish outliers more heavily
+    def calculate_match(row, target_stats):
+        # Sum of absolute differences
+        diff = sum(abs(row[existing_identity] - target_stats[existing_identity]))
     
-    # We calibrate the percentage: 
-    # In a typical draft, a total diff of ~150 points across 13 stats 
-    # should feel like a 'Low Match' (~60-70%).
-    # We'll use 400 as a "Max Realistic Difference" for scaling.
-    max_realistic_diff = 400 
-    percentage = 100 - (min(diff, max_realistic_diff) / max_realistic_diff * 100)
-    return percentage
+        # We calibrate the percentage: 
+        # In a typical draft, a total diff of ~150 points across 13 stats 
+        # should feel like a 'Low Match' (~60-70%).
+        # We'll use 400 as a "Max Realistic Difference" for scaling.
+        max_realistic_diff = 400 
+        percentage = 100 - (min(diff, max_realistic_diff) / max_realistic_diff * 100)
+        return percentage
 
-comparison_df['Match_Pct'] = comparison_df.apply(
-    lambda row: calculate_match(row, p_data), axis=1
-)
+    comparison_df['Match_Pct'] = comparison_df.apply(
+        lambda row: calculate_match(row, p_data), axis=1
+    )
 
-# 3. Get the Top 3
-similar_prospects = comparison_df.sort_values('Match_Pct', ascending=False).head(3)
+    # 3. Get the Top 3
+    similar_prospects = comparison_df.sort_values('Match_Pct', ascending=False).head(3)
 
-# 4. Display Cards
-sim_cols = st.columns(3)
-for i, (idx, sim_p) in enumerate(similar_prospects.iterrows()):
-    with sim_cols[i]:
-        match_val = sim_p['Match_Pct']
+    # 4. Display Cards
+    sim_cols = st.columns(3)
+    for i, (idx, sim_p) in enumerate(similar_prospects.iterrows()):
+        with sim_cols[i]:
+            match_val = sim_p['Match_Pct']
         
-        # Changed height to auto and added min-height for better spacing
-        st.markdown(f"""
-            <div style="
-                border: 1px solid #D4AF37; 
-                padding: 15px; 
-                border-radius: 10px; 
-                background-color: white; 
-                min-height: 120px; 
-                height: auto; 
-                margin-bottom: 10px;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-            ">
-                <p style="margin:0; font-size: 0.8rem; color: #64748B; font-weight: bold;">{match_val:.1f}% STYLE MATCH</p>
-                <h4 style="margin:5px 0; color: #1E293B; line-height: 1.2;">{sim_p['Full_Name']}</h4>
-                <p style="margin:0; color: #D4AF37; font-weight: bold; font-size: 0.9rem;">{sim_p['Pos']} | Pot: {sim_p['Overall_Pot']:.1f}</p>
-            </div>
-        """, unsafe_allow_html=True)
+            # Changed height to auto and added min-height for better spacing
+            st.markdown(f"""
+                <div style="
+                    border: 1px solid #D4AF37; 
+                    padding: 15px; 
+                    border-radius: 10px; 
+                    background-color: white; 
+                    min-height: 120px; 
+                    height: auto; 
+                    margin-bottom: 10px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                ">
+                    <p style="margin:0; font-size: 0.8rem; color: #64748B; font-weight: bold;">{match_val:.1f}% STYLE MATCH</p>
+                    <h4 style="margin:5px 0; color: #1E293B; line-height: 1.2;">{sim_p['Full_Name']}</h4>
+                    <p style="margin:0; color: #D4AF37; font-weight: bold; font-size: 0.9rem;">{sim_p['Pos']} | Pot: {sim_p['Overall_Pot']:.1f}</p>
+                </div>
+            """, unsafe_allow_html=True)
         
-        if st.button(f"View {sim_p['Full_Name']}", key=f"sim_{sim_p['Full_Name']}", use_container_width=True):
-            st.session_state.selected_player = sim_p['Full_Name']
-            st.session_state.teleport_success = sim_p['Full_Name']
-            st.rerun()
+            if st.button(f"View {sim_p['Full_Name']}", key=f"sim_{sim_p['Full_Name']}", use_container_width=True):
+                st.session_state.selected_player = sim_p['Full_Name']
+                st.session_state.teleport_success = sim_p['Full_Name']
+                st.rerun()
 
 with tab2:
     st.header("🎯 Advanced Player Finder")
@@ -677,6 +677,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
