@@ -87,6 +87,7 @@ try:
     player_stats['Current_Rating'] = player_stats[calc_stats].mean(axis=1)
     player_stats['Overall_Pot'] = player_stats[calc_pot].mean(axis=1)
     player_stats['Growth_Score'] = player_stats['Overall_Pot'] - player_stats['Current_Rating']
+    all_positions = sorted(filtered_stats['Pos'].unique())
 
 except Exception as e:
     st.error(f"⚠️ Error processing data: {e}")
@@ -111,7 +112,12 @@ for i, row in project_board.iterrows():
         st.rerun()
 
 # --- TABBED NAVIGATION ---
-tab1, tab2, tab3 = st.tabs(["👤 Individual Prospect Scout", "📋 Draft War Room", "📈 Strategy & Analysis"])
+tab1, tab2, tab3, tab4 = st.tabs([
+    "👤 Individual Prospect Scout", 
+    "🎯 Advanced Player Finder", 
+    "📋 Draft War Room", 
+    "📈 Strategy & Analysis"
+])
 
 with tab1:
     player_list = list(filtered_stats['Full_Name'].unique())
@@ -347,15 +353,93 @@ with tab1:
             f4.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
             st.plotly_chart(f4, use_container_width=True)
 with tab2:
+    st.header("🎯 Advanced Player Finder")
+    
+    # --- SEARCH MODE TOGGLE ---
+    search_mode = st.radio(
+        "Search Based On:",
+        ["Current Ratings", "Potential Ratings"],
+        horizontal=True,
+        help="Switch to 'Potential' to search based on a player's projected ceiling."
+    )
+    
+    # Logic to handle the suffix based on toggle
+    sfx = "_POT" if search_mode == "Potential Ratings" else ""
+    
+    st.write(f"Currently searching by: **{search_mode}**")
+
+    # --- SEARCH FILTERS ---
+    f_col1, f_col2, f_col3 = st.columns([1.2, 1, 1])
+    
+    with f_col1:
+        st.subheader("⚔️ Offense")
+        # Shooting
+        min_cor = st.slider(f"Min Corner 3 ({'COR' + sfx})", 0, 60, 0)
+        min_atb = st.slider(f"Min ATB 3 ({'ATB' + sfx})", 0, 60, 0)
+        min_mid = st.slider(f"Min Midrange ({'MID' + sfx})", 0, 99, 0)
+        min_ra  = st.slider(f"Min Rim Area ({'RA' + sfx})", 0, 99, 0)
+        min_ft  = st.slider(f"Min FT ({'FT' + sfx})", 0, 99, 0)
+        # Core
+        o_c1, o_c2 = st.columns(2)
+        min_scr = o_c1.number_input(f"Min SCR{sfx}", 0, 99, 0)
+        min_pas = o_c2.number_input(f"Min PAS{sfx}", 0, 99, 0)
+        min_hdl = o_c1.number_input(f"Min HDL{sfx}", 0, 99, 0)
+        min_orb = o_c2.number_input(f"Min OREB{sfx}", 0, 99, 0)
+        min_iq  = o_c1.number_input(f"Min IQ{sfx}", 0, 99, 0)
+        min_drfl= o_c2.number_input(f"Min DRFL{sfx}", 0, 25, 0)
+
+    with f_col2:
+        st.subheader("🛡️ Defense")
+        min_def = st.slider(f"Min DEF{sfx}", 0, 99, 0)
+        min_drb = st.slider(f"Min DRB{sfx}", 0, 99, 0)
+        min_stl = st.slider(f"Min STL{sfx}", 0, 99, 0)
+        min_blk = st.slider(f"Min BLK{sfx}", 0, 99, 0)
+        min_dis = st.slider(f"Min DIS{sfx}", 0, 99, 0)
+
+    with f_col3:
+        st.subheader("📋 Requirements")
+        min_ceil = st.number_input("Minimum Ceiling (OVR Pot)", 0.0, 99.0, 0.0)
+        min_growth = st.number_input("Minimum Growth Score", 0.0, 30.0, 0.0)
+        search_pos = st.multiselect("Limit to Positions", options=all_positions, default=all_positions)
+
+    # --- DYNAMIC QUERY LOGIC ---
+    # Note how we use f'stat{sfx}' to switch columns based on the toggle
+    query_df = filtered_stats[
+        (filtered_stats[f'FG_COR{sfx}'] >= min_cor) & (filtered_stats[f'FG_ATB{sfx}'] >= min_atb) &
+        (filtered_stats[f'FG_MID{sfx}'] >= min_mid) & (filtered_stats[f'FG_RA{sfx}'] >= min_ra) &
+        (filtered_stats[f'FT{sfx}'] >= min_ft) &
+        (filtered_stats[f'SCR{sfx}'] >= min_scr) & (filtered_stats[f'PAS{sfx}'] >= min_pas) &
+        (filtered_stats[f'HDL{sfx}'] >= min_hdl) & (filtered_stats[f'ORB{sfx}'] >= min_orb) &
+        (filtered_stats[f'IQ{sfx}'] >= min_iq) & (filtered_stats[f'DRFL{sfx}'] >= min_drfl) &
+        (filtered_stats[f'DEF{sfx}'] >= min_def) & (filtered_stats[f'DRB{sfx}'] >= min_drb) &
+        (filtered_stats[f'STL{sfx}'] >= min_stl) & (filtered_stats[f'BLK{sfx}'] >= min_blk) &
+        (filtered_stats[f'DIS{sfx}'] >= min_dis) & (filtered_stats['Overall_Pot'] >= min_ceil) &
+        (filtered_stats['Growth_Score'] >= min_growth) & (filtered_stats['Pos'].isin(search_pos))
+    ].copy()
+
+    # --- RESULTS ---
+    st.divider()
+    st.subheader(f"🔍 Search Results ({len(query_df)} prospects found)")
+    
+    if not query_df.empty:
+        # Display the stats that match the search mode
+        cols_to_show = ['Full_Name', 'Pos', 'Overall_Pot', f'SCR{sfx}', f'PAS{sfx}', f'DEF{sfx}', f'FG_ATB{sfx}']
+        st.dataframe(query_df[cols_to_show].sort_values('Overall_Pot', ascending=False), use_container_width=True, hide_index=True)
+        
+        target_player = st.selectbox("Detailed View", query_df['Full_Name'].unique())
+        if st.button("Launch Scouting Report"):
+            st.session_state.selected_player = target_player
+            st.rerun()
+
+with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
     
-    # --- POSITION FILTER ---
-    all_positions = sorted(filtered_stats['Pos'].unique())
-    selected_pos = st.multiselect("Filter by Position", options=all_positions, default=all_positions)
+    # This filter ONLY affects the War Room table
+    war_room_pos = st.multiselect("Filter Table by Position", options=all_positions, default=all_positions)
     
-    # Apply Position Filter
-    bb_df = filtered_stats[filtered_stats['Pos'].isin(selected_pos)].copy()
-    bb_df['My Rank'] = 0 
+    # Apply the filter to create the war room dataframe
+    bb_df = filtered_stats[filtered_stats['Pos'].isin(war_room_pos)].copy()
+    bb_df['My Rank'] = 0
     
     # 1. Stat Pairs for the (C/P) columns
     stat_pairs = {
@@ -405,7 +489,7 @@ with tab2:
         file_name=f"MyWarRoom_{selected_year}.csv",
         mime="text/csv"
     )
-with tab3:
+with tab4:
     st.header("⚖️ Risk vs. Reward Analysis")
     st.write("This chart visualizes player readiness (Current) against their remaining upside (Growth).")
 
@@ -434,6 +518,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
