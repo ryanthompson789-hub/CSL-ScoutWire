@@ -416,7 +416,9 @@ with tab2:
         # Find the button in your results logic
         target_player = st.selectbox("Detailed View", query_df['Full_Name'].unique())
 
-        st.button("Launch Scouting Report", on_click=launch_player, args=(target_player,))
+        if st.button("Launch Scouting Report", on_click=lambda: st.session_state.update({"selected_player": target_player})):
+            st.success(f"✅ Report for {target_player} is ready in Tab 1!")
+            st.info("Click the 'Individual Prospect Scout' tab above to view.")
 
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -505,6 +507,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
