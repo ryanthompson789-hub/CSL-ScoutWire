@@ -9,15 +9,39 @@ st.set_page_config(page_title="CSL Scoutwire", layout="wide")
 if 'selected_player' not in st.session_state:
     st.session_state.selected_player = None
 
-# Function to handle clicking a player name
 def select_player(name):
     st.session_state.selected_player = name
 
+# 1. THE PERMANENT UPLOADER (Always visible)
+# This stays at the top so GMs can add more files anytime.
 uploaded_files = st.file_uploader("Upload Scouting CSVs", accept_multiple_files=True, type=['csv'])
 
+# 2. THE CONDITIONAL BRANDING (Only shows when empty)
 if not uploaded_files:
-    st.info("👋 Welcome! Please upload your scouting CSVs to begin.")
-    st.stop()
+    st.markdown("""
+        <style>
+        .stApp { background-color: #F8FAFC; }
+        .league-title { color: #1E293B; font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: -1px; text-align: center; margin-top: 20px; }
+        .league-subtitle { color: #D4AF37; font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: 4px; text-align: center; margin-bottom: 20px; }
+        .instruction { color: #64748B; font-size: 1.1rem; text-align: center; margin-bottom: 30px; }
+        .trophy-icon { font-size: 50px; background: white; border: 4px solid #D4AF37; width: 100px; height: 100px; line-height: 90px; border-radius: 50%; margin: 0 auto 30px auto; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        </style>
+    """, unsafe_allow_html=True)
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.markdown("<h1 class='league-title'>CHAMPION SIM LEAGUE</h1>", unsafe_allow_html=True)
+        st.markdown("<p class='league-subtitle'>Scouting & Personnel Terminal</p>", unsafe_allow_html=True)
+        st.markdown("<hr style='border: 2px solid #D4AF37; width: 40%; margin: 20px auto;'>", unsafe_allow_html=True)
+        st.markdown('<div class="trophy-icon">🏆</div>', unsafe_allow_html=True)
+        st.markdown("<p class='instruction'>Please upload league-standard scouting CSVs from CSLO to begin.</p>", unsafe_allow_html=True)
+    
+    st.stop() # Prevents the rest of the app from showing until the first file is uploaded
+
+# --- 3. THE ACTUAL APP (Runs only after files are uploaded) ---
+st.title("🏀 CSL ScoutWire")
+
+# Your Data Processing, Sidebar, and Tabs code continues here...
     
 # --- DATA PROCESSING ---
 try:
@@ -566,6 +590,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
