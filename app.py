@@ -431,19 +431,36 @@ with tab2:
         (filtered_stats['FT' + suffix] >= min_ft)
     ]
 
-    # --- 5. RESULTS DISPLAY ---
+   # --- 5. RESULTS DISPLAY ---
     st.subheader(f"🔍 Matches Found: {len(query_df)}")
     
     if not query_df.empty:
-        # We always want the name, pos, and potential
-        base_cols = ['Full_Name', 'Pos', 'Overall_Pot']
+        # Define the full set of columns to mirror the Draft War Room style
+        # We pair them up: Current followed by Potential for every major category
+        display_columns = [
+            'Full_Name', 'Pos', 'Overall_Pot',
+            'SCR', 'SCR_POT',
+            'PAS', 'PAS_POT',
+            'HDL', 'HDL_POT',
+            'DRFL', 'DRFL_POT',
+            'IQ', 'IQ_POT',
+            'DEF', 'DEF_POT',
+            'DIS', 'DIS_POT',
+            'BLK', 'BLK_POT',
+            'STL', 'STL_POT',
+            'FG_RA', 'FG_RA_POT',
+            'FG_ITP', 'FG_ITP_POT',
+            'FG_MID', 'FG_MID_POT',
+            'FG_COR', 'FG_COR_POT',
+            'FG_ATB', 'FG_ATB_POT',
+            'FT', 'FT_POT'
+        ]
         
-        # We dynamically show the stats that vary by the Lens (suffix)
-        # This ensures the table headers match the Search Mode perfectly
-        dynamic_cols = ['SCR'+suffix, 'FG_ITP'+suffix, 'FG_MID'+suffix, 'DEF'+suffix]
+        # Filter the display list to only include columns that actually exist in your dataframe
+        existing_display_cols = [c for c in display_columns if c in query_df.columns]
         
         st.dataframe(
-            query_df[base_cols + dynamic_cols].sort_values('Overall_Pot', ascending=False), 
+            query_df[existing_display_cols].sort_values('Overall_Pot', ascending=False), 
             use_container_width=True
         )
 
@@ -453,14 +470,14 @@ with tab2:
         st.write("### 🚀 Launch Report")
         target_player = st.selectbox("Select Prospect to View in Tab 1", query_df['Full_Name'].unique())
         
-        if st.button(
+        st.button(
             f"View Full Report for {target_player}", 
+            on_click=lambda: st.session_state.update({"selected_player": target_player}),
             use_container_width=True,
             type="primary"
-        ):
-            # Update the session state and use a success message to guide them back
-            st.session_state.selected_player = target_player
-            st.success(f"✅ {target_player} loaded! Switch to 'Individual Prospect Scout' to view.")
+        )
+    else:
+        st.warning("No prospects meet all criteria. Try easing up on the sliders.")
         
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -549,6 +566,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
