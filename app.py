@@ -45,7 +45,16 @@ try:
     
     year_col = 'YEAR' 
     bio_cols = ['Pos', 'AGE', 'HT', 'WT', 'FROM']
-    
+
+    # --- CONVERT NUMERIC POSITIONS TO TEXT ---
+    pos_map = {
+        '1': 'PG', '2': 'SG', '3': 'SF', '4': 'PF', '5': 'C',
+        1: 'PG', 2: 'SG', 3: 'SF', 4: 'PF', 5: 'C',
+        1.0: 'PG', 2.0: 'SG', 3.0: 'SF', 4.0: 'PF', 5.0: 'C'
+    }
+    if 'Pos' in df.columns:
+        df['Pos'] = df['Pos'].map(pos_map).fillna(df['Pos'])
+        
     # 1. Stats used for GRAPHING
     core_stats = ['SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 'DIS', 'IQ', 'DRFL']
     
@@ -425,6 +434,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
