@@ -213,32 +213,37 @@ with tab1:
             else:
                 archetype = "Raw Developmental Project"
 
-            # 4. Contextual Analysis (Adjusts tone based on sample size)
-            sample_size = len(df_context)
-            if sample_size > 15:
-                # Use relative ranking if we have enough data
-                rank = df_context['Overall_Pot'].rank(ascending=False).loc[player.name]
-                context_note = f"Ranked #{int(rank)} in overall ceiling among the {sample_size} scouted prospects."
-            else:
-                # Use absolute assessment for small samples
-                context_note = "Limited class data available; evaluation based on independent pro-style benchmarks."
-
-            # 5. Narrative Construction
-            report = (
-                f"**Scouting Director's Note:** {player['Full_Name']} projects as a **{archetype}**. "
-                f"His current toolkit shows {player.get('SCR', 0):.0f} scoring and {player.get('DEF', 0):.0f} defense. "
-                f"{context_note} "
+           # 4. Contextual Dual-Ranking (The Floor vs Ceiling Story)
+        sample_size = len(df_context)
+        if sample_size > 10:
+            # Rank by Current (Readiness) and Potential (Ceiling)
+            # We use method='min' so tied scores get the same high rank
+            pot_rank = int(df_context['Overall_Pot'].rank(ascending=False, method='min').loc[player.name])
+            cur_rank = int(df_context['Current_Rating'].rank(ascending=False, method='min').loc[player.name])
+            
+            context_note = (
+                f"Within this class of {sample_size}, he ranks **#{cur_rank} in Immediate Readiness** "
+                f"and **#{pot_rank} in Long-Term Ceiling**."
             )
+        else:
+            context_note = "Evaluation based on independent pro-style benchmarks (Limited class data available)."
 
-            # 6. The "Upside" finisher
-            if player['Growth_Score'] > 12:
-                report += f"Drafting him is a play for the future—his **{player['Growth_Score']:.1f}** upside suggests a significantly higher peak than his current tape shows."
-            else:
-                report += "He is a 'plug-and-play' option whose value lies in his immediate readiness and established basketball IQ."
+        # 5. Narrative Construction
+        report = (
+            f"**Scouting Director's Note:** {player['Full_Name']} projects as a **{archetype}**. "
+            f"His current toolkit is defined by {player.get('SCR', 0):.0f} scoring and {player.get('DEF', 0):.0f} defensive impact. "
+            f"{context_note} "
+        )
 
-            return report
-        except Exception as e:
-            return f"Draft report pending: {str(e)}"
+        # 6. The "Upside" finisher
+        if player['Growth_Score'] > 12:
+            report += f"Drafting him is a high-reward play—his **+{player['Growth_Score']:.1f}** upside suggests a significantly higher peak than his current tape shows."
+        else:
+            report += "He is a 'plug-and-play' option whose value lies in his immediate polish and established basketball IQ."
+
+        return report
+    except Exception as e:
+        return f"Scouting report unavailable: {str(e)}"
 
     # --- START UI RENDERING ---
     # Now that p_data is defined, these lines will no longer error
@@ -680,6 +685,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
