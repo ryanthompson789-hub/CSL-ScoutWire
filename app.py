@@ -434,12 +434,13 @@ with tab2:
     st.subheader(f"🔍 Matches Found: {len(query_df)}")
     
     if not query_df.empty:
-        base_cols = ['Full_Name', 'Pos', 'Overall_Pot']
-        # Show the new stats in the preview for quick verification
-        stat_cols = ['DRFL'+suffix, 'DIS'+suffix, 'Overall_Pot'] 
+        # We define base columns and then add the specific stats we want to preview
+        # Note: 'Overall_Pot' is only listed ONCE here to avoid the ValueError
+        display_columns = ['Full_Name', 'Pos', 'Overall_Pot', 'DRFL'+suffix, 'DIS'+suffix, 'SCR'+suffix]
         
+        # We use 'list(set())' logic or just a clean list to ensure uniqueness
         st.dataframe(
-            query_df[base_cols + stat_cols].sort_values('Overall_Pot', ascending=False), 
+            query_df[display_columns].sort_values('Overall_Pot', ascending=False), 
             use_container_width=True
         )
 
@@ -455,8 +456,6 @@ with tab2:
             use_container_width=True,
             type="primary"
         )
-    else:
-        st.warning("No prospects match those specific criteria. Try easing up on DIS or DRFL.")
         
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -545,6 +544,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
