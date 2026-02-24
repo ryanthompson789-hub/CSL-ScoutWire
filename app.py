@@ -181,61 +181,64 @@ with tab1:
     # --- p_data Definition ---
     p_data = filtered_stats[filtered_stats['Full_Name'] == selected_player].iloc[0]
 
-    # --- ADVANCED SCOUTING REPORT FUNCTION ---
     def generate_scout_report(player, df_context):
-        # We use a try/except here just in case a numeric column is missing
         try:
-            avg = df_context.mean(numeric_only=True)
-            high_traits = [stat for stat in ['SCR', 'DEF', 'PAS', 'IQ', 'BLK', 'STL', 'ORB'] 
-                           if stat in player and player[stat] > avg[stat] + 8]
-            
-            archetype = "Well-Rounded Prospect"
-            if player.get('SCR', 0) >= 65 and player.get('FG_ATB', 0) > 38:
-                archetype = "Dynamic Perimeter Scorer"
-            elif player.get('DEF', 0) >= 65 and (player.get('BLK', 0) > 55 or player.get('STL', 0) > 60):
-                archetype = "High-Impact Defensive Specialist"
-            elif player.get('PAS', 0) >= 70 and player.get('IQ', 0) >= 70:
-                archetype = "High-IQ Playmaker"
-            elif player.get('ORB', 0) >= 70 or player.get('BLK', 0) >= 55:
-                archetype = "Interior Anchor"
+            # 1. Define Universal "Pro-Level" Benchmarks
+            # These ensure the report is accurate even if only 1 player is scouted
+            ELITE = 75
+            PLUS = 65
+            SOLID = 55
 
-            if player.get('SCR', 0) >= 70 and player.get('DEF', 0) >= 70:
-                archetype = "Elite Two-Way Threat"
-
-            habits = []
-            if player.get('DriveKick', 0) > 7: habits.append("attacking the paint to collapse defenses and find the open man")
-            if player.get('CS', 0) > 10: habits.append("finding space as a catch-and-shoot threat")
-            if player.get('PostUp', 0) > 8: habits.append("using their size in the low post")
-            if player.get('DriveShot', 0) > 8: habits.append("attacking the paint looking to finish at the rim")
-            
-            habit_str = f" often seen {habits[0]}" if habits else " playing within the flow of the offense"
-
-            shot_note = ""
-            if player.get('FG_COR', 0) > 38:
-                shot_note = "He is particularly dangerous from the corners,"
-            elif player.get('FG_RA', 0) > 60:
-                shot_note = "He is an elite finisher at the rim,"
-            elif player.get('FG_ATB', 0) > 38:
-                shot_note = "He is an above average shooter from above the break,"
-            elif player.get('FT', 0) > 80:
-                shot_note = "He has been shooting over 80% from the free throw line in college,"
-            
-            growth_diff = player['Growth_Score'] - avg['Growth_Score']
-            if growth_diff > 5:
-                upside_type = "is a 'high-ceiling' project that scouts are buzzing about"
-            elif growth_diff < -5:
-                upside_type = "is one of the most 'pro-ready' players in the class, though his room for growth is smaller"
+            # 2. Check for Traits
+            is_scorer = player.get('SCR', 0) >= PLUS or player.get('FG_ATB', 0) >= 40
+            is_playmaker = player.get('PAS', 0) >= PLUS and player.get('IQ', 0) >= PLUS
+            is_defender = player.get('DEF', 0) >= PLUS
+            is_big_man = player.get('ORB', 0) >= PLUS or player.get('BLK', 0) >= 55
+        
+            # 3. Determine Archetype (Prioritizing the most impressive combo)
+            if is_scorer and is_defender:
+                archetype = "Elite Two-Way Prospect"
+            elif is_playmaker and is_scorer:
+                archetype = "Dynamic Offensive Engine"
+            elif is_playmaker:
+                archetype = "High-IQ Floor General"
+            elif is_scorer:
+                archetype = "Natural Three-Level Scorer"
+            elif is_defender and is_big_man:
+                archetype = "Paint-Protecting Anchor"
+            elif is_defender:
+                archetype = "Lockdown Wing Specialist"
+            elif is_big_man:
+                archetype = "Interior Physical Presence"
             else:
-                upside_type = "shows a steady developmental curve"
+                archetype = "Raw Developmental Project"
 
-            return (
-                f"**{player['Full_Name']}** projects as a **{archetype}** who {upside_type}. "
-                f"Compared to the {selected_year} class average, his {', '.join(high_traits) if high_traits else 'fundamentals'} "
-                f"stand out immediately. You'll find him{habit_str}. {shot_note} "
-                f"while his long-term success will depend on reaching that **{player['Overall_Pot']:.1f}** ceiling."
+            # 4. Contextual Analysis (Adjusts tone based on sample size)
+            sample_size = len(df_context)
+            if sample_size > 15:
+                # Use relative ranking if we have enough data
+                rank = df_context['Overall_Pot'].rank(ascending=False).loc[player.name]
+                context_note = f"Ranked #{int(rank)} in overall ceiling among the {sample_size} scouted prospects."
+            else:
+                # Use absolute assessment for small samples
+                context_note = "Limited class data available; evaluation based on independent pro-style benchmarks."
+
+            # 5. Narrative Construction
+            report = (
+                f"**Scouting Director's Note:** {player['Full_Name']} projects as a **{archetype}**. "
+                f"His current toolkit shows {player.get('SCR', 0):.0f} scoring and {player.get('DEF', 0):.0f} defensive impact. "
+                f"{context_note} "
             )
-        except:
-            return "Scouting report unavailable for this prospect."
+
+            # 6. The "Upside" finisher
+            if player['Growth_Score'] > 12:
+                report += f"Drafting him is a play for the future—his **{player['Growth_Score']:.1f}** upside suggests a significantly higher peak than his current tape shows."
+            else:
+                report += "He is a 'plug-and-play' option whose value lies in his immediate readiness and established basketball IQ."
+
+            return report
+        except Exception as e:
+            return f"Draft report pending: {str(e)}"
 
     # --- START UI RENDERING ---
     # Now that p_data is defined, these lines will no longer error
@@ -677,6 +680,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
