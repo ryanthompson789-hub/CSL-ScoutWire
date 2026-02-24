@@ -431,29 +431,32 @@ with tab2:
         (filtered_stats['FT' + suffix] >= min_ft)
     ]
 
-  # --- 5. RESULTS DISPLAY ---
+ # --- 5. RESULTS DISPLAY ---
     st.subheader(f"🔍 Matches Found: {len(query_df)}")
     
     if not query_df.empty:
-        # Define the core columns that stay no matter what
         base_cols = ['Full_Name', 'Pos', 'Overall_Pot']
-        
-        # Define the ratings we want to show
-        # These will automatically add "_POT" if the Potential Lens is selected
         ratings_to_show = [
             'SCR', 'PAS', 'HDL', 'DRFL', 'IQ', 
             'DEF', 'DIS', 'BLK', 'STL', 'ORB', 'DRB',
             'FG_RA', 'FG_ITP', 'FG_MID', 'FG_COR', 'FG_ATB', 'FT'
         ]
         
-        # Combine base columns with the dynamic ratings (applying the suffix)
         display_columns = base_cols + [r + suffix for r in ratings_to_show]
-        
-        # Safety check: ensure the columns exist in the data
         existing_cols = [c for c in display_columns if c in query_df.columns]
         
+        # --- THE ROUNDING FIX ---
+        # 1. Select only the columns we want to show
+        # 2. Round to 0 decimals
+        # 3. Convert to 'Int64' to ensure no '.0' appears
+        final_table = query_df[existing_cols].copy()
+        
+        # We only round the columns that are actually numbers (ratings)
+        numeric_cols = [c for c in existing_cols if c not in ['Full_Name', 'Pos']]
+        final_table[numeric_cols] = final_table[numeric_cols].round(0).astype('Int64')
+
         st.dataframe(
-            query_df[existing_cols].sort_values('Overall_Pot', ascending=False), 
+            final_table.sort_values('Overall_Pot', ascending=False), 
             use_container_width=True
         )
 
@@ -559,6 +562,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
