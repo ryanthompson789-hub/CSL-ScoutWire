@@ -380,16 +380,16 @@ with tab2:
     
     with col1:
         st.markdown("**Offense**")
-        min_scr = st.slider("Scoring (SCR)", 0, 100, 0)
-        min_pas = st.slider("Passing (PAS)", 0, 100, 0)
-        min_hdl = st.slider("Handling (HDL)", 0, 100, 0)
-        min_drfl = st.slider("Drive/Foul (DRFL)", 0, 100, 0) # Added DRFL
-        min_iq  = st.slider("Bball IQ", 0, 100, 0)
+        min_scr  = st.slider("Scoring (SCR)", 0, 100, 0)
+        min_drfl = st.slider("Drive/Foul (DRFL)", 0, 100, 0) # Added DRFL here
+        min_pas  = st.slider("Passing (PAS)", 0, 100, 0)
+        min_hdl  = st.slider("Handling (HDL)", 0, 100, 0)
+        min_iq   = st.slider("Bball IQ", 0, 100, 0)
 
     with col2:
         st.markdown("**Defense & Glass**")
         min_def = st.slider("Defense (DEF)", 0, 100, 0)
-        min_di  = st.slider("Def. Impact (DI)", 0, 100, 0) # Added DI
+        min_dis = st.slider("Discipline/Interior (DIS)", 0, 100, 0) # Added DIS here
         min_blk = st.slider("Blocking (BLK)", 0, 100, 0)
         min_stl = st.slider("Steals (STL)", 0, 100, 0)
         min_orb = st.slider("Off. Rebs (ORB)", 0, 100, 0)
@@ -409,16 +409,16 @@ with tab2:
     pos_filter = st.multiselect("Filter by Position", options=all_positions, default=all_positions)
 
     # --- 4. QUERY LOGIC ---
-    # Included DRFL and DI in the filtering logic
+    # Now filtering for DRFL and DIS as well
     query_df = filtered_stats[
         (filtered_stats['Pos'].isin(pos_filter)) &
         (filtered_stats['SCR' + suffix] >= min_scr) &
+        (filtered_stats['DRFL' + suffix] >= min_drfl) &
         (filtered_stats['PAS' + suffix] >= min_pas) &
         (filtered_stats['HDL' + suffix] >= min_hdl) &
-        (filtered_stats['DRFL' + suffix] >= min_drfl) &
         (filtered_stats['IQ' + suffix] >= min_iq) &
         (filtered_stats['DEF' + suffix] >= min_def) &
-        (filtered_stats['DI' + suffix] >= min_di) &
+        (filtered_stats['DIS' + suffix] >= min_dis) &
         (filtered_stats['BLK' + suffix] >= min_blk) &
         (filtered_stats['STL' + suffix] >= min_stl) &
         (filtered_stats['ORB' + suffix] >= min_orb) &
@@ -435,8 +435,8 @@ with tab2:
     
     if not query_df.empty:
         base_cols = ['Full_Name', 'Pos', 'Overall_Pot']
-        # Displaying the two newest stats in the preview table for confirmation
-        stat_cols = ['SCR'+suffix, 'DRFL'+suffix, 'DEF'+suffix, 'DI'+suffix] 
+        # Show the new stats in the preview for quick verification
+        stat_cols = ['DRFL'+suffix, 'DIS'+suffix, 'Overall_Pot'] 
         
         st.dataframe(
             query_df[base_cols + stat_cols].sort_values('Overall_Pot', ascending=False), 
@@ -456,7 +456,7 @@ with tab2:
             type="primary"
         )
     else:
-        st.warning("No prospects meet all these criteria. Try adjusting the DRFL or DI sliders.")
+        st.warning("No prospects match those specific criteria. Try easing up on DIS or DRFL.")
 
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -545,6 +545,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
