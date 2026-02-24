@@ -181,7 +181,7 @@ with tab1:
     # --- p_data Definition ---
     p_data = filtered_stats[filtered_stats['Full_Name'] == selected_player].iloc[0]
 
-def generate_scout_report(player, df_context):
+    def generate_scout_report(player, df_context):
     try:
         # 1. Define Universal "Pro-Level" Benchmarks
         PLUS = 65
@@ -684,6 +684,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
