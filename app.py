@@ -474,14 +474,11 @@ with tab2:
             # 1. Update the session state (the "Teleport" logic)
             st.session_state.update({"selected_player": target_player})
             
-            # 2. Trigger the "Pop-up" style notification
-            st.toast(f"✅ Report for {target_player} loaded!", icon="🚀")
+            # 2. Trigger the sleek "toast" notification in the corner
+            st.toast(f"Report for {target_player} loaded.", icon="📋")
             
-            # 3. Add a clear visual success box
-            st.success(f"**Action Complete!** {target_player}'s scouting profile is now live in the **Individual Prospect Scout** tab above. ⬆️")
-            
-            # 4. Optional: Balloon celebration (fun for high-potential finds!)
-            st.balloons()
+            # 3. Add the clear instructions box
+            st.success(f"**Success!** {target_player}'s profile is ready. Please click the **Individual Prospect Scout** tab at the top of your screen to view the report. ⬆️")
         
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -570,6 +567,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
