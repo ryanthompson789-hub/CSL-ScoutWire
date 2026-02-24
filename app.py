@@ -87,7 +87,6 @@ try:
     player_stats['Current_Rating'] = player_stats[calc_stats].mean(axis=1)
     player_stats['Overall_Pot'] = player_stats[calc_pot].mean(axis=1)
     player_stats['Growth_Score'] = player_stats['Overall_Pot'] - player_stats['Current_Rating']
-    all_positions = sorted(filtered_stats['Pos'].unique())
 
 except Exception as e:
     st.error(f"⚠️ Error processing data: {e}")
@@ -103,6 +102,8 @@ else:
     filtered_stats = player_stats
     selected_year = "All"
 
+all_positions = sorted(filtered_stats['Pos'].unique())
+    
 st.sidebar.header(f"🚀 Top Growth ({selected_year})")
 project_board = filtered_stats.sort_values(by='Growth_Score', ascending=False).head(5)
 
@@ -518,6 +519,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
