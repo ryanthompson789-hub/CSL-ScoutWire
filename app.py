@@ -442,16 +442,18 @@ similar_prospects = comparison_df.sort_values('Match_Pct', ascending=False).head
 sim_cols = st.columns(3)
 for i, (idx, sim_p) in enumerate(similar_prospects.iterrows()):
     with sim_cols[i]:
-        # Calculate a % match for the UI (Optional but looks cool)
-       # Inside your loop for displaying cards:
-match_val = sim_p['Match_Pct']
-st.markdown(f"""
-    <div style="border: 1px solid #D4AF37; padding: 15px; border-radius: 10px; background-color: white; height: 100%;">
-        <p style="margin:0; font-size: 0.8rem; color: #64748B;">{match_val:.1f}% STYLE MATCH</p>
-        ...
-""")
+        # Indent these lines so they belong to the 'with' block
+        match_val = sim_p['Match_Pct']
         
-        if st.button(f"View {sim_p['Full_Name']}", key=f"sim_{sim_p['Full_Name']}"):
+        st.markdown(f"""
+            <div style="border: 1px solid #D4AF37; padding: 15px; border-radius: 10px; background-color: white; height: 100px; margin-bottom: 10px;">
+                <p style="margin:0; font-size: 0.8rem; color: #64748B;">{match_val:.1f}% STYLE MATCH</p>
+                <h4 style="margin:0; color: #1E293B;">{sim_p['Full_Name']}</h4>
+                <p style="margin:0; color: #D4AF37; font-weight: bold;">{sim_p['Pos']} | Pot: {sim_p['Overall_Pot']:.1f}</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button(f"View {sim_p['Full_Name']}", key=f"sim_{sim_p['Full_Name']}", use_container_width=True):
             st.session_state.selected_player = sim_p['Full_Name']
             st.session_state.teleport_success = sim_p['Full_Name']
             st.rerun()
@@ -664,6 +666,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
