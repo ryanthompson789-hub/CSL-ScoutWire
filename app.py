@@ -12,9 +12,9 @@ if 'selected_player' not in st.session_state:
 def select_player(name):
     st.session_state.selected_player = name
 
-# 1. THE PERMANENT UPLOADER (Always visible)
-# This stays at the top so GMs can add more files anytime.
-uploaded_files = st.file_uploader("Upload Scouting CSVs", accept_multiple_files=True, type=['csv'])
+# 1. THE PERMANENT UPLOADER & TITLE (Moved to Sidebar)
+st.sidebar.title("🏀 CSL ScoutWire")
+uploaded_files = st.sidebar.file_uploader("Upload Scouting CSVs", accept_multiple_files=True, type=['csv'])
 
 # 2. THE CONDITIONAL BRANDING (Only shows when empty)
 if not uploaded_files:
@@ -36,31 +36,21 @@ if not uploaded_files:
         st.markdown('<div class="trophy-icon">🏆</div>', unsafe_allow_html=True)
         st.markdown("<p class='instruction'>Please upload league-standard scouting CSVs from CSLO to begin.</p>", unsafe_allow_html=True)
 
-    # 4. Footer info
     st.markdown("<p style='color: #94A3B8; font-size: 0.8rem; text-align: center; margin-top: 40px; font-weight: bold;'>VERSION 1.0</p>", unsafe_allow_html=True)
     st.markdown("<p style='color: #CBD5E1; font-size: 0.7rem; text-align: center;'>Internal data for CSL GMs only.</p>", unsafe_allow_html=True)
     
-    st.stop() # Prevents the rest of the app from showing until the first file is uploaded
+    st.stop() 
 
-# --- 3. THE ACTUAL APP (Runs only after files are uploaded) ---
-st.title("🏀 CSL ScoutWire")
-
-# Your Data Processing, Sidebar, and Tabs code continues here...
-    
 # --- DATA PROCESSING ---
 try:
-    # 1. Combine all uploaded CSVs into one dataframe
     df_list = [pd.read_csv(file) for file in uploaded_files]
     df = pd.concat(df_list)
     
-    # 2. THE SANITY FILTER
     if 'DRFL' in df.columns:
         df = df[df['DRFL'] <= 25]
 
-    # 3. Define the Full Name
     df['Full_Name'] = df['First'].astype(str) + " " + df['Last'].astype(str)
     
-    # 4. Standardize Column Names
     rename_map = {
         'POS': 'Pos', 'Pos': 'Pos',
         'AGE': 'AGE', 'Age': 'AGE',
@@ -73,7 +63,6 @@ try:
     year_col = 'YEAR' 
     bio_cols = ['Pos', 'AGE', 'HT', 'WT', 'FROM']
 
-    # --- CONVERT NUMERIC POSITIONS TO TEXT ---
     pos_map = {
         '1': 'PG', '2': 'SG', '3': 'SF', '4': 'PF', '5': 'C',
         1: 'PG', 2: 'SG', 3: 'SF', 4: 'PF', 5: 'C',
@@ -82,16 +71,10 @@ try:
     if 'Pos' in df.columns:
         df['Pos'] = df['Pos'].map(pos_map).fillna(df['Pos'])
         
-    # 1. Stats used for GRAPHING
     core_stats = ['SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 'DIS', 'IQ', 'DRFL']
-    
-    # 2. Stats used for CALCULATING Ratings
     calc_stats = ['SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 'IQ']
-    
-    # Generate potential versions
     pot_stats = [s + '_POT' for s in core_stats]
     calc_pot = [s + '_POT' for s in calc_stats]
-    
     shoot_stats = ['FG_RA', 'FG_ITP', 'FG_MID', 'FG_COR', 'FG_ATB', 'FT']
     shoot_pot = [s + '_POT' for s in shoot_stats]
     
@@ -110,7 +93,6 @@ try:
     if year_col in player_stats.columns:
         player_stats[year_col] = player_stats[year_col].astype(str).str.replace('.0', '', regex=False)
     
-    # --- THE KEY CALCULATIONS ---
     player_stats['Current_Rating'] = player_stats[calc_stats].mean(axis=1)
     player_stats['Overall_Pot'] = player_stats[calc_pot].mean(axis=1)
     player_stats['Growth_Score'] = player_stats['Overall_Pot'] - player_stats['Current_Rating']
@@ -119,7 +101,8 @@ except Exception as e:
     st.error(f"⚠️ Error processing data: {e}")
     st.stop()
 
-# --- SIDEBAR ---
+# --- SIDEBAR FILTERS ---
+st.sidebar.divider() # Optional separator
 st.sidebar.header("🔍 Database Filters")
 if year_col in player_stats.columns:
     available_years = sorted(player_stats[year_col].unique(), reverse=True)
@@ -138,6 +121,7 @@ for i, row in project_board.iterrows():
     if st.sidebar.button(f"{row['Full_Name']} (+{row['Growth_Score']:.1f})", key=f"side_{row['Full_Name']}"):
         st.session_state.selected_player = row['Full_Name']
 
+# --- MAIN APP INTERFACE ---
 tab1, tab2, tab3, tab4 = st.tabs([
     "👤 Individual Prospect Scout", 
     "🎯 Advanced Player Finder", 
@@ -594,6 +578,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
