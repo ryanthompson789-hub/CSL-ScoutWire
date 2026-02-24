@@ -14,10 +14,58 @@ if 'selected_player' not in st.session_state:
 def select_player(name):
     st.session_state.selected_player = name
 
-uploaded_files = st.file_uploader("Upload Scouting CSVs", accept_multiple_files=True, type=['csv'])
+# --- AESTHETIC LEAGUE LANDING PAGE ---
+st.markdown("""
+    <style>
+    .stApp { background-color: #111827; }
+    .csl-card {
+        background-color: #1f2937;
+        padding: 50px;
+        border-radius: 20px;
+        border: 2px solid #d4af37;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .league-title {
+        color: #ffffff;
+        font-family: 'Helvetica Neue', sans-serif;
+        letter-spacing: 2px;
+        margin-bottom: 0px;
+    }
+    .league-subtitle {
+        color: #d4af37;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        margin-bottom: 30px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
+# 1. League Branding Header
+col1, col2, col3 = st.columns([1, 3, 1])
+with col2:
+    st.markdown("<h1 class='league-title' style='text-align: center;'>CHAMPION SIMULATION LEAGUE</h1>", unsafe_allow_html=True)
+    st.markdown("<p class='league-subtitle' style='text-align: center;'>Official Scouting & Personnel Terminal</p>", unsafe_allow_html=True)
+
+    # 2. The Central Upload Card
+    with st.container():
+        st.markdown('<div class="csl-card">', unsafe_allow_html=True)
+        st.markdown("<h2 style='color: white;'>Welcome, GM</h2>", unsafe_allow_html=True)
+        st.write("Upload your team's scouting CSVs to initialize the terminal.")
+        
+        # This replaces your old uploaded_files line
+        uploaded_files = st.file_uploader("", accept_multiple_files=True, type=['csv'])
+        
+        st.markdown("<p style='color: #9ca3af; font-size: 0.8rem; margin-top: 20px;'>Secure Connection Established • System v2.6</p>", unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    st.write("---")
+    st.caption("Access restricted to authorized CSL Personnel. All prospect data (e.g., Janes) is for internal evaluation only.")
+
+# 3. Stop execution until files are actually uploaded
 if not uploaded_files:
-    st.info("👋 Welcome! Please upload your scouting CSVs to begin.")
     st.stop()
 
 # --- DATA PROCESSING ---
@@ -567,6 +615,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
