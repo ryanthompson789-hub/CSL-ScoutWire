@@ -399,6 +399,54 @@ with tab1:
             f4.update_layout(barmode='group', yaxis=dict(range=[0, 100]), height=300, margin=dict(l=20,r=20,t=30,b=20))
             st.plotly_chart(f4, use_container_width=True)
 
+# --- DRAFT SIMILAR (FULL DNA VERSION) ---
+st.divider()
+st.header("🧬 Similar Prospect Profiles")
+st.caption("These players share the most similar statistical DNA based on skill, IQ, and shooting profile.")
+
+# 1. Expanded DNA including the shooting profile
+identity_stats = [
+    'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'DEF', 'STL', 'BLK', 'IQ', 
+    'FG_RA', 'FG_ITP', 'FG_MID', 'FG_COR', 'FG_ATB', 'FT'
+]
+
+# Ensure we only use stats that actually exist in the data to avoid errors
+existing_identity = [s for s in identity_stats if s in filtered_stats.columns]
+
+# 2. Calculate the "Distance"
+comparison_df = filtered_stats.copy()
+comparison_df = comparison_df[comparison_df['Full_Name'] != selected_player]
+
+# Calculate weighted difference (Lower score = more similar)
+comparison_df['Similarity_Score'] = comparison_df[existing_identity].apply(
+    lambda row: sum(abs(row - p_data[existing_identity])), axis=1
+)
+
+# 3. Get the Top 3
+similar_prospects = comparison_df.sort_values('Similarity_Score').head(3)
+
+# 4. Display Cards
+sim_cols = st.columns(3)
+for i, (idx, sim_p) in enumerate(similar_prospects.iterrows()):
+    with sim_cols[i]:
+        # Calculate a % match for the UI (Optional but looks cool)
+        # Max possible diff per stat is ~100. We'll show a rough 'Match %'
+        match_pct = max(0, 100 - (sim_p['Similarity_Score'] / len(existing_identity)))
+        
+        st.markdown(f"""
+            <div style="border: 1px solid #D4AF37; padding: 15px; border-radius: 10px; background-color: white; height: 100%;">
+                <p style="margin:0; font-size: 0.8rem; color: #64748B;">{match_pct:.1f}% STYLE MATCH</p>
+                <h4 style="margin:0; color: #1E293B;">{sim_p['Full_Name']}</h4>
+                <p style="margin:0; color: #D4AF37; font-weight: bold;">{sim_p['Pos']} | Pot: {sim_p['Overall_Pot']:.1f}</p>
+                <hr style="margin: 10px 0;">
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button(f"View {sim_p['Full_Name']}", key=f"sim_{sim_p['Full_Name']}"):
+            st.session_state.selected_player = sim_p['Full_Name']
+            st.session_state.teleport_success = sim_p['Full_Name']
+            st.rerun()
+
 with tab2:
     st.header("🎯 Advanced Player Finder")
     
@@ -607,6 +655,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
