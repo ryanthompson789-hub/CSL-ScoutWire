@@ -381,7 +381,7 @@ with tab2:
     with col1:
         st.markdown("**Offense**")
         min_scr  = st.slider("Scoring (SCR)", 0, 100, 0)
-        min_drfl = st.slider("Drive/Foul (DRFL)", 0, 100, 0) # Added DRFL here
+        min_drfl = st.slider("Drive/Foul (DRFL)", 0, 100, 0)
         min_pas  = st.slider("Passing (PAS)", 0, 100, 0)
         min_hdl  = st.slider("Handling (HDL)", 0, 100, 0)
         min_iq   = st.slider("Bball IQ", 0, 100, 0)
@@ -389,7 +389,7 @@ with tab2:
     with col2:
         st.markdown("**Defense & Glass**")
         min_def = st.slider("Defense (DEF)", 0, 100, 0)
-        min_dis = st.slider("Discipline/Interior (DIS)", 0, 100, 0) # Added DIS here
+        min_dis = st.slider("Discipline/Interior (DIS)", 0, 100, 0)
         min_blk = st.slider("Blocking (BLK)", 0, 100, 0)
         min_stl = st.slider("Steals (STL)", 0, 100, 0)
         min_orb = st.slider("Off. Rebs (ORB)", 0, 100, 0)
@@ -398,6 +398,7 @@ with tab2:
     with col3:
         st.markdown("**Shooting Profile**")
         min_ra  = st.slider("At Rim (RA)", 0, 100, 0)
+        min_itp = st.slider("In The Paint (ITP)", 0, 100, 0) # Added ITP here
         min_mid = st.slider("Mid-Range", 0, 100, 0)
         min_cor = st.slider("Corner 3s", 0, 100, 0)
         min_atb = st.slider("Above Break 3s", 0, 100, 0)
@@ -409,7 +410,6 @@ with tab2:
     pos_filter = st.multiselect("Filter by Position", options=all_positions, default=all_positions)
 
     # --- 4. QUERY LOGIC ---
-    # Now filtering for DRFL and DIS as well
     query_df = filtered_stats[
         (filtered_stats['Pos'].isin(pos_filter)) &
         (filtered_stats['SCR' + suffix] >= min_scr) &
@@ -424,6 +424,7 @@ with tab2:
         (filtered_stats['ORB' + suffix] >= min_orb) &
         (filtered_stats['DRB' + suffix] >= min_drb) &
         (filtered_stats['FG_RA' + suffix] >= min_ra) &
+        (filtered_stats['FG_ITP' + suffix] >= min_itp) & # Included in query
         (filtered_stats['FG_MID' + suffix] >= min_mid) &
         (filtered_stats['FG_COR' + suffix] >= min_cor) &
         (filtered_stats['FG_ATB' + suffix] >= min_atb) &
@@ -434,11 +435,9 @@ with tab2:
     st.subheader(f"🔍 Matches Found: {len(query_df)}")
     
     if not query_df.empty:
-        # We define base columns and then add the specific stats we want to preview
-        # Note: 'Overall_Pot' is only listed ONCE here to avoid the ValueError
-        display_columns = ['Full_Name', 'Pos', 'Overall_Pot', 'DRFL'+suffix, 'DIS'+suffix, 'SCR'+suffix]
+        # Clean display list to avoid Duplicate Column errors
+        display_columns = ['Full_Name', 'Pos', 'Overall_Pot', 'SCR'+suffix, 'FG_ITP'+suffix, 'FG_MID'+suffix]
         
-        # We use 'list(set())' logic or just a clean list to ensure uniqueness
         st.dataframe(
             query_df[display_columns].sort_values('Overall_Pot', ascending=False), 
             use_container_width=True
@@ -456,6 +455,8 @@ with tab2:
             use_container_width=True,
             type="primary"
         )
+    else:
+        st.warning("No prospects meet all criteria. Try easing up on the 'In The Paint' or 'Mid-Range' sliders.")
         
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -544,6 +545,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
