@@ -152,24 +152,27 @@ tab1, tab2, tab3, tab4 = st.tabs([
 with tab1:
     player_list = list(filtered_stats['Full_Name'].unique())
     
-    # 1. Sync session state with the list
-    if 'selected_player' not in st.session_state or st.session_state.selected_player not in player_list:
+    # 1. Sync session state if it's missing or invalid
+    if st.session_state.selected_player not in player_list:
         st.session_state.selected_player = player_list[0]
     
-    # 2. Get the row number for the dropdown
-    default_index = player_list.index(st.session_state.selected_player)
+    # 2. CALLBACK FUNCTION: This solves the "double-click" bug
+    def update_player():
+        st.session_state.selected_player = st.session_state.player_selector_key
 
-    # 3. The Dropdown Menu
+    # 3. THE DROPDOWN: Uses 'key' and 'on_change' for instant response
     selected_player = st.selectbox(
         "Select Primary Prospect", 
         player_list, 
-        index=default_index
+        index=player_list.index(st.session_state.selected_player),
+        key="player_selector_key",
+        on_change=update_player
     )
     
-    # Update state if the user manually clicks the dropdown
-    st.session_state.selected_player = selected_player
+    # Ensure the local variable matches the session state
+    selected_player = st.session_state.selected_player
 
-    # --- CRITICAL FIX: DEFINE p_data HERE ---
+    # --- p_data Definition ---
     p_data = filtered_stats[filtered_stats['Full_Name'] == selected_player].iloc[0]
 
     # --- ADVANCED SCOUTING REPORT FUNCTION ---
@@ -598,6 +601,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
