@@ -435,11 +435,15 @@ with tab2:
     st.subheader(f"🔍 Matches Found: {len(query_df)}")
     
     if not query_df.empty:
-        # Clean display list to avoid Duplicate Column errors
-        display_columns = ['Full_Name', 'Pos', 'Overall_Pot', 'SCR'+suffix, 'FG_ITP'+suffix, 'FG_MID'+suffix]
+        # We always want the name, pos, and potential
+        base_cols = ['Full_Name', 'Pos', 'Overall_Pot']
+        
+        # We dynamically show the stats that vary by the Lens (suffix)
+        # This ensures the table headers match the Search Mode perfectly
+        dynamic_cols = ['SCR'+suffix, 'FG_ITP'+suffix, 'FG_MID'+suffix, 'DEF'+suffix]
         
         st.dataframe(
-            query_df[display_columns].sort_values('Overall_Pot', ascending=False), 
+            query_df[base_cols + dynamic_cols].sort_values('Overall_Pot', ascending=False), 
             use_container_width=True
         )
 
@@ -449,14 +453,14 @@ with tab2:
         st.write("### 🚀 Launch Report")
         target_player = st.selectbox("Select Prospect to View in Tab 1", query_df['Full_Name'].unique())
         
-        st.button(
+        if st.button(
             f"View Full Report for {target_player}", 
-            on_click=lambda: st.session_state.update({"selected_player": target_player}),
             use_container_width=True,
             type="primary"
-        )
-    else:
-        st.warning("No prospects meet all criteria. Try easing up on the 'In The Paint' or 'Mid-Range' sliders.")
+        ):
+            # Update the session state and use a success message to guide them back
+            st.session_state.selected_player = target_player
+            st.success(f"✅ {target_player} loaded! Switch to 'Individual Prospect Scout' to view.")
         
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -545,6 +549,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
