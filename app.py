@@ -340,7 +340,12 @@ if comp_player != "None":
 with tab2:
     st.header(f"📋 {selected_year} Draft War Room")
     
-    bb_df = filtered_stats.copy()
+    # --- POSITION FILTER ---
+    all_positions = sorted(filtered_stats['Pos'].unique())
+    selected_pos = st.multiselect("Filter by Position", options=all_positions, default=all_positions)
+    
+    # Apply Position Filter
+    bb_df = filtered_stats[filtered_stats['Pos'].isin(selected_pos)].copy()
     bb_df['My Rank'] = 0 
     
     # 1. Stat Pairs for the (C/P) columns
@@ -360,12 +365,10 @@ with tab2:
                                   bb_df[pot].fillna(0).astype(float).round(0).astype(int).astype(str)
             combined_cols.append(display_name)
 
-    # 2. Updated Columns to include 'Current_Rating'
-    # We put Current and Ceiling side-by-side for easy comparison
+    # 2. Define Columns
     bio_cols = ['My Rank', 'Full_Name', 'Pos', 'Current_Rating', 'Overall_Pot', 'Growth_Score']
     existing_cols = [c for c in bio_cols + combined_cols if c in bb_df.columns]
     
-    # Sort by Ceiling (Overall_Pot) by default
     summary_df = bb_df[existing_cols].sort_values(by='Overall_Pot', ascending=False)
 
     # 3. Enhanced Table Configuration
@@ -374,8 +377,8 @@ with tab2:
         column_config={
             "My Rank": st.column_config.NumberColumn("My Rank", min_value=1, format="%d"),
             "Full_Name": st.column_config.TextColumn("Player", pinned=True),
-            "Current_Rating": st.column_config.NumberColumn("Current", format="%.1f", help="Average of all current core stats"),
-            "Overall_Pot": st.column_config.NumberColumn("Ceiling", format="%.1f", help="Average of all potential core stats"),
+            "Current_Rating": st.column_config.NumberColumn("Current", format="%.1f"),
+            "Overall_Pot": st.column_config.NumberColumn("Ceiling", format="%.1f"),
             "Growth_Score": st.column_config.NumberColumn("Upside (+)", format="%.1f"),
             **{col: st.column_config.TextColumn(width="small") for col in combined_cols}
         },
@@ -422,6 +425,7 @@ with tab3:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
