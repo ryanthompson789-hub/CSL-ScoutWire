@@ -123,25 +123,16 @@ tab1, tab2, tab3, tab4 = st.tabs([
 with tab1:
     player_list = list(filtered_stats['Full_Name'].unique())
     
-    # 1. Sync session state with the list
-    if st.session_state.selected_player not in player_list:
-        st.session_state.selected_player = player_list[0]
+    # This index logic is what makes the "teleportation" work
+    current_idx = player_list.index(st.session_state.selected_player) if st.session_state.selected_player in player_list else 0
     
-    # 2. Get the row number for the dropdown
-    default_index = player_list.index(st.session_state.selected_player)
-
-    # 3. The Dropdown Menu
     selected_player = st.selectbox(
         "Select Primary Prospect", 
         player_list, 
-        index=default_index,
-        key="main_player_selector"
+        index=current_idx
     )
-    
-    # Update state if the user manually clicks the dropdown
+    # Sync back in case they change it manually in Tab 1
     st.session_state.selected_player = selected_player
-
-    p_data = filtered_stats[filtered_stats['Full_Name'] == selected_player].iloc[0]
 
   # --- ADVANCED SCOUTING REPORT FUNCTION ---
     def generate_scout_report(player, df_context):
@@ -435,10 +426,14 @@ with tab2:
         cols_to_show = ['Full_Name', 'Pos', 'Overall_Pot', f'SCR{sfx}', f'PAS{sfx}', f'DEF{sfx}', f'FG_ATB{sfx}']
         st.dataframe(query_df[cols_to_show].sort_values('Overall_Pot', ascending=False), use_container_width=True, hide_index=True)
         
+        # Create a function to handle the click
+        def launch_player(name):
+            st.session_state.selected_player = name
+
+        # Find the button in your results logic
         target_player = st.selectbox("Detailed View", query_df['Full_Name'].unique())
-        if st.button("Launch Scouting Report"):
-            st.session_state.selected_player = target_player
-            st.rerun()
+
+        st.button("Launch Scouting Report", on_click=launch_player, args=(target_player,))
 
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -527,6 +522,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
