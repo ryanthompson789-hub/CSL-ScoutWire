@@ -5,6 +5,34 @@ import plotly.express as px
 
 st.set_page_config(page_title="CSL Scoutwire", layout="wide")
 
+# --- COMPACT SIDEBAR CSS ---
+st.markdown("""
+    <style>
+    /* Shrink the file uploader height */
+    [data-testid="stFileUploader"] {
+        padding-top: 0px;
+    }
+    [data-testid="stFileUploaderDropzone"] {
+        padding: 0.5rem;
+    }
+    /* Tighten sidebar button spacing */
+    .stButton button {
+        width: 100%;
+        padding: 2px 10px;
+        min-height: 1.5rem;
+        margin-bottom: -10px;
+    }
+    /* Reduce sidebar header sizes */
+    [data-testid="stSidebar"] h1 {
+        font-size: 1.5rem !important;
+    }
+    [data-testid="stSidebar"] h2 {
+        font-size: 1.1rem !important;
+        margin-top: -15px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- SESSION STATE INITIALIZATION ---
 if 'selected_player' not in st.session_state:
     st.session_state.selected_player = None
@@ -12,9 +40,9 @@ if 'selected_player' not in st.session_state:
 def select_player(name):
     st.session_state.selected_player = name
 
-# 1. THE PERMANENT UPLOADER & TITLE (Moved to Sidebar)
+# 1. SIDEBAR CONTENT (Uploader & Title)
 st.sidebar.title("🏀 CSL ScoutWire")
-uploaded_files = st.sidebar.file_uploader("Upload Scouting CSVs", accept_multiple_files=True, type=['csv'])
+uploaded_files = st.sidebar.file_uploader("Upload CSVs", accept_multiple_files=True, type=['csv'])
 
 # 2. THE CONDITIONAL BRANDING (Only shows when empty)
 if not uploaded_files:
@@ -52,22 +80,15 @@ try:
     df['Full_Name'] = df['First'].astype(str) + " " + df['Last'].astype(str)
     
     rename_map = {
-        'POS': 'Pos', 'Pos': 'Pos',
-        'AGE': 'AGE', 'Age': 'AGE',
-        'HT': 'HT', 'Ht': 'HT', 'Height': 'HT',
-        'WT': 'WT', 'Wt': 'WT', 'Weight': 'WT',
-        'FROM': 'FROM', 'From': 'FROM', 'School': 'FROM'
+        'POS': 'Pos', 'Pos': 'Pos', 'AGE': 'AGE', 'Age': 'AGE',
+        'HT': 'HT', 'Ht': 'HT', 'Height': 'HT', 'WT': 'WT', 
+        'Wt': 'WT', 'Weight': 'WT', 'FROM': 'FROM', 'From': 'FROM'
     }
     df = df.rename(columns=rename_map)
     
     year_col = 'YEAR' 
     bio_cols = ['Pos', 'AGE', 'HT', 'WT', 'FROM']
-
-    pos_map = {
-        '1': 'PG', '2': 'SG', '3': 'SF', '4': 'PF', '5': 'C',
-        1: 'PG', 2: 'SG', 3: 'SF', 4: 'PF', 5: 'C',
-        1.0: 'PG', 2.0: 'SG', 3.0: 'SF', 4.0: 'PF', 5.0: 'C'
-    }
+    pos_map = {1: 'PG', 2: 'SG', 3: 'SF', 4: 'PF', 5: 'C', '1': 'PG', '2': 'SG', '3': 'SF', '4': 'PF', '5': 'C'}
     if 'Pos' in df.columns:
         df['Pos'] = df['Pos'].map(pos_map).fillna(df['Pos'])
         
@@ -79,11 +100,9 @@ try:
     shoot_pot = [s + '_POT' for s in shoot_stats]
     
     all_numeric_stats = core_stats + pot_stats + shoot_stats + shoot_pot + ["DriveKick", "DriveShot", "PostUp", "PullUp", "CS", "PASS", "LocATB", "LocCorner", "LodMid", "LocPaint", "DUNK RATE", "RIM AREA RATE"]
-    
     existing_numeric = [s for s in all_numeric_stats if s in df.columns]
     existing_bio = [col for col in bio_cols if col in df.columns]
-    if year_col in df.columns:
-        existing_bio.append(year_col)
+    if year_col in df.columns: existing_bio.append(year_col)
 
     player_stats = df.groupby('Full_Name').agg({
         **{stat: 'mean' for stat in existing_numeric},
@@ -101,12 +120,12 @@ except Exception as e:
     st.error(f"⚠️ Error processing data: {e}")
     st.stop()
 
-# --- SIDEBAR FILTERS ---
-st.sidebar.divider() # Optional separator
-st.sidebar.header("🔍 Database Filters")
+# --- SIDEBAR FILTERS (Now more compact) ---
+st.sidebar.divider()
+st.sidebar.subheader("🔍 Filters") # Changed from header to subheader for size
 if year_col in player_stats.columns:
     available_years = sorted(player_stats[year_col].unique(), reverse=True)
-    selected_year = st.sidebar.selectbox("Select Draft Year", available_years)
+    selected_year = st.sidebar.selectbox("Select Year", available_years) # Shorter label
     filtered_stats = player_stats[player_stats[year_col] == selected_year]
 else:
     filtered_stats = player_stats
@@ -114,14 +133,15 @@ else:
 
 all_positions = sorted(filtered_stats['Pos'].unique())
     
-st.sidebar.header(f"🚀 Top Growth ({selected_year})")
+st.sidebar.subheader(f"🚀 Top Growth") # Removed the year to save space
 project_board = filtered_stats.sort_values(by='Growth_Score', ascending=False).head(5)
 
+# Rendering the buttons with the new compact CSS
 for i, row in project_board.iterrows():
     if st.sidebar.button(f"{row['Full_Name']} (+{row['Growth_Score']:.1f})", key=f"side_{row['Full_Name']}"):
         st.session_state.selected_player = row['Full_Name']
 
-# --- MAIN APP INTERFACE ---
+# --- MAIN APP ---
 tab1, tab2, tab3, tab4 = st.tabs([
     "👤 Individual Prospect Scout", 
     "🎯 Advanced Player Finder", 
@@ -578,6 +598,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
