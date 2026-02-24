@@ -110,7 +110,13 @@ project_board = filtered_stats.sort_values(by='Growth_Score', ascending=False).h
 for i, row in project_board.iterrows():
     if st.sidebar.button(f"{row['Full_Name']} (+{row['Growth_Score']:.1f})", key=f"side_{row['Full_Name']}"):
         st.session_state.selected_player = row['Full_Name']
-        
+
+tab1, tab2, tab3, tab4 = st.tabs([
+    "👤 Individual Prospect Scout", 
+    "🎯 Advanced Player Finder", 
+    "📋 Draft War Room", 
+    "📈 Strategy & Analysis"
+    
 with tab1:
     player_list = list(filtered_stats['Full_Name'].unique())
     
@@ -498,6 +504,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
