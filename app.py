@@ -140,7 +140,8 @@ project_board = filtered_stats.sort_values(by='Growth_Score', ascending=False).h
 for i, row in project_board.iterrows():
     if st.sidebar.button(f"{row['Full_Name']} (+{row['Growth_Score']:.1f})", key=f"side_{row['Full_Name']}"):
         st.session_state.selected_player = row['Full_Name']
-
+        st.rerun()
+        
 # --- MAIN APP ---
 tab1, tab2, tab3, tab4 = st.tabs([
     "👤 Individual Prospect Scout", 
@@ -496,7 +497,7 @@ with tab2:
 
         st.divider()
         
-        # --- THE TELEPORT BUTTON ---
+       # --- THE TELEPORT BUTTON (FIXED) ---
         st.write("### 🚀 Launch Report")
         target_player = st.selectbox("Select Prospect to View in Tab 1", query_df['Full_Name'].unique())
         
@@ -505,14 +506,16 @@ with tab2:
             use_container_width=True,
             type="primary"
         ):
-            # 1. Update the session state (the "Teleport" logic)
-            st.session_state.update({"selected_player": target_player})
+            # 1. Update the session state (matching Tab 1's logic)
+            st.session_state.selected_player = target_player
             
-            # 2. Trigger the sleek "toast" notification in the corner
+            # 2. Trigger the notification
             st.toast(f"Report for {target_player} loaded.", icon="📋")
             
-            # 3. Add the clear instructions box
-            st.success(f"**Success!** {target_player}'s profile is ready. Please click the **Individual Prospect Scout** tab at the top of your screen to view the report. ⬆️")
+            # 3. SUCCESS MESSAGE & REFRESH
+            # The st.rerun() ensures Tab 1 sees the change immediately
+            st.success(f"**Success!** {target_player}'s profile is ready. Click the **Individual Prospect Scout** tab above! ⬆️")
+            st.rerun()
         
 with tab3:
     st.header(f"📋 {selected_year} Draft War Room")
@@ -601,6 +604,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
