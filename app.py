@@ -137,8 +137,18 @@ try:
     if year_col in player_stats.columns:
         player_stats[year_col] = player_stats[year_col].astype(str).str.replace('.0', '', regex=False)
     
+# 1. Calculate Average, Min, and Max for the Floor (Current Rating)
     player_stats['Current_Rating'] = player_stats[calc_stats].mean(axis=1)
+    # Create the min/max versions by looking at the min/max of the individual components
+    player_stats['Current_Rating_min'] = player_stats[[f"{s}_min" for s in calc_stats if f"{s}_min" in player_stats.columns]].mean(axis=1)
+    player_stats['Current_Rating_max'] = player_stats[[f"{s}_max" for s in calc_stats if f"{s}_max" in player_stats.columns]].mean(axis=1)
+
+    # 2. Calculate Average, Min, and Max for the Ceiling (Overall Potential)
     player_stats['Overall_Pot'] = player_stats[calc_pot].mean(axis=1)
+    player_stats['Overall_Pot_min'] = player_stats[[f"{s}_min" for s in calc_pot if f"{s}_min" in player_stats.columns]].mean(axis=1)
+    player_stats['Overall_Pot_max'] = player_stats[[f"{s}_max" for s in calc_pot if f"{s}_max" in player_stats.columns]].mean(axis=1)
+    
+    # 3. Growth Score (Difference of averages)
     player_stats['Growth_Score'] = player_stats['Overall_Pot'] - player_stats['Current_Rating']
 
 except Exception as e:
@@ -746,6 +756,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
