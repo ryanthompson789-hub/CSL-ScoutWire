@@ -302,34 +302,31 @@ with tab1:
     with st.expander("📝 Scouting Director's Executive Summary", expanded=True):
         st.write(generate_scout_report(p_data, filtered_stats))
 
-# --- NEW: SCOUTING VARIANCE & METRICS ---
+# --- UPDATED: SCOUTING METRICS ---
         st.divider()
-        col_m1, col_m2, col_m3 = st.columns(3)
-        with col_m1:
-            st.metric("Scout Reports", f"{p_data['Reports_Count']}")
-        with col_m2:
-            # Show the spread of their overall potential
-            pot_range = f"{int(p_data['Overall_Pot_min'])} - {int(p_data['Overall_Pot_max'])}"
-            st.metric("Ceiling Range", pot_range)
-        with col_m3:
-            # Show the spread of their current floor
-            cur_range = f"{int(p_data['Current_Rating_min'])} - {int(p_data['Current_Rating_max'])}"
-            st.metric("Floor Range", cur_range)
+        
+        # Only show the Report Count as a main metric
+        st.metric("Total Scout Reports", f"{p_data['Reports_Count']}")
 
-        with st.expander("🔍 View Detailed Rating Variance", expanded=False):
-            st.write("Average ratings shown with the [Lowest - Highest] range from individual scouts.")
+        # Keep the detailed variance tucked away for power users
+        with st.expander("🔍 View Scouting Variance (High/Low)", expanded=False):
+            st.write("Comparing the average against the individual scout extremes.")
             
-            # Key stats to show in the variance table
+            # List of stats to show in the variance table
             v_stats = ['SCR', 'PAS', 'HDL', 'DEF', 'IQ', 'FG_RA', 'FG_ATB']
             variance_list = []
             
             for s in v_stats:
                 if s in p_data:
+                    # Fallback to the main value if min/max doesn't exist (e.g., only 1 report)
+                    low_val = p_data.get(f"{s}_min", p_data[s])
+                    high_val = p_data.get(f"{s}_max", p_data[s])
+                    
                     variance_list.append({
                         "Attribute": s,
-                        "Low": int(p_data.get(f"{s}_min", p_data[s])),
+                        "Low": int(low_val),
                         "AVERAGE": round(p_data[s], 1),
-                        "High": int(p_data.get(f"{s}_max", p_data[s])),
+                        "High": int(high_val),
                     })
             
             st.table(pd.DataFrame(variance_list).set_index('Attribute'))
@@ -756,6 +753,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
