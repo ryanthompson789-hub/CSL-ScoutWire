@@ -377,36 +377,34 @@ with tab1:
         fig_shoot.update_layout(title="Shooting Development", barmode='overlay', yaxis=dict(range=[0, 100]), height=350, margin=dict(l=20,r=20,t=40,b=20))
         st.plotly_chart(fig_shoot, use_container_width=True)
 
-    # --- SCOUTING VARIANCE TABLE (Middle UI) ---
-        st.subheader("📊 Scouting Variance Detail")
-        st.caption("A breakdown of the consensus (Average) vs. the scouting extremes (Low/High).")
-
-        # The full attribute list as requested
-        v_stats = [
-            'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 
-            'DIS', 'IQ', 'DRFL', 'FG_RA', 'FG_ITP', 'FG_MID', 
-            'FG_COR', 'FG_ATB', 'FT'
-        ]
+# --- SCOUTING VARIANCE (Full Width & Expandable) ---
+        # Ensure this is NOT indented under col1 or col2
+        st.divider() 
         
-        variance_list = []
-        for s in v_stats:
-            if s in p_data:
-                # Using .get() ensures the app won't crash if min/max columns are missing
-                low_val = p_data.get(f"{s}_min", p_data[s])
-                high_val = p_data.get(f"{s}_max", p_data[s])
-                
-                variance_list.append({
-                    "Attribute": s,
-                    "Low": int(low_val),
-                    "AVERAGE": round(p_data[s], 1),
-                    "High": int(high_val),
-                })
+        with st.expander("📊 View Detailed Scouting Variance (High/Low)", expanded=False):
+            st.write("consensus (Average) vs. scouting extremes (Low/High) for all attributes.")
 
-        # Display as a wide, clean table
-        df_variance = pd.DataFrame(variance_list).set_index('Attribute')
-        
-        # Using st.dataframe instead of st.table gives you better control over width
-        st.dataframe(df_variance, use_container_width=True)
+            v_stats = [
+                'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 
+                'DIS', 'IQ', 'DRFL', 'FG_RA', 'FG_ITP', 'FG_MID', 
+                'FG_COR', 'FG_ATB', 'FT'
+            ]
+            
+            variance_list = []
+            for s in v_stats:
+                if s in p_data:
+                    low_val = p_data.get(f"{s}_min", p_data[s])
+                    high_val = p_data.get(f"{s}_max", p_data[s])
+                    
+                    variance_list.append({
+                        "Attribute": s,
+                        "Low": int(low_val),
+                        "AVERAGE": round(p_data[s], 1),
+                        "High": int(high_val),
+                    })
+
+            df_variance = pd.DataFrame(variance_list).set_index('Attribute')
+            st.table(df_variance) # Using st.table here for a clean, non-scrollable look
         
     # --- BOTTOM UI: HABITS ---
     st.divider()
@@ -761,6 +759,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
