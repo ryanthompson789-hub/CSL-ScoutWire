@@ -387,36 +387,51 @@ with tab1:
         'FG_COR', 'FG_ATB', 'FT'
     ]
 
+       # --- SCOUTING VARIANCE (Full Width & Dual Expanders) ---
+        st.divider() 
+        
         # 1. CURRENT RATINGS VARIANCE
-    with st.expander("📊 View Current Rating Variance (High/Low)", expanded=False):
-        current_list = []
-        for s in core_stats:
-            if s in p_data:
-                low_val = p_data.get(f"{s}_min", p_data[s])
-                high_val = p_data.get(f"{s}_max", p_data[s])
-                current_list.append({
-                    "Attribute": s,
-                    "Low": int(low_val),
-                    "AVERAGE": int(round(p_data[s], 0)),
-                    "High": int(high_val),
-                })
-        st.table(pd.DataFrame(current_list).set_index('Attribute'))
+        with st.expander("📊 View Current Rating Variance (Scouted Range)", expanded=False):
+            current_list = []
+            for s in core_stats:
+                if s in p_data:
+                    # Determine Deviation Rule
+                    dev = 2 if s in ['FG_RA', 'FG_ITP', 'FG_MID', 'FT', 'FG_ATB', 'FG_COR', 'DRFL', 'RA_RATE', 'DUNK_RATE'] else 5
+                    
+                    avg = round(p_data[s], 0)
+                    # Apply Rule: Avg +/- (Dev)
+                    range_low = int(avg - dev)
+                    range_high = int(avg + dev)
+                    
+                    current_list.append({
+                        "Attribute": s,
+                        "Raw Low": int(p_data.get(f"{s}_min", p_data[s])),
+                        "AVERAGE": int(avg),
+                        "Raw High": int(p_data.get(f"{s}_max", p_data[s])),
+                        "Standard Deviation Range": f"{range_low} - {range_high}"
+                    })
+            st.table(pd.DataFrame(current_list).set_index('Attribute'))
 
         # 2. POTENTIAL RATINGS VARIANCE
-        # Note: This assumes your potential columns end in '_POT' or similar
-    with st.expander("🚀 View Potential Rating Variance (High/Low)", expanded=False):
+    with st.expander("🚀 View Potential Rating Variance (Scouted Range)", expanded=False):
         potential_list = []
         for s in core_stats:
-                # We look for the Potential version of each stat (e.g., SCR_Pot)
             pot_col = f"{s}_POT" 
             if pot_col in p_data:
-                low_val = p_data.get(f"{pot_col}_min", p_data[pot_col])
-                high_val = p_data.get(f"{pot_col}_max", p_data[pot_col])
+                # Determine Deviation Rule
+                dev = 2 if s in ['FG_RA', 'FG_ITP', 'FG_MID', 'FT', 'FG_ATB', 'FG_COR', 'DRFL', 'RA_RATE', 'DUNK_RATE'] else 15
+                    
+                avg = round(p_data[pot_col], 0)
+                # Apply Rule: Avg +/- (Dev)
+                range_low = int(avg - dev)
+                range_high = int(avg + dev)
+                    
                 potential_list.append({
                     "Attribute": s,
-                    "Low": int(low_val),
-                    "AVERAGE": int(round(p_data[pot_col], 0)),
-                    "High": int(high_val),
+                    "Raw Low": int(p_data.get(f"{pot_col}_min", p_data[pot_col])),
+                    "AVERAGE": int(avg),
+                    "Raw High": int(p_data.get(f"{pot_col}_max", p_data[pot_col])),
+                    "Standard Deviation Range": f"{range_low} - {range_high}"
                 })
             
         if potential_list:
@@ -777,6 +792,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
