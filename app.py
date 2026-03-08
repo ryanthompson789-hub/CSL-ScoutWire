@@ -312,13 +312,22 @@ with tab1:
         with st.expander("🔍 View Scouting Variance (High/Low)", expanded=False):
             st.write("Comparing the average against the individual scout extremes.")
             
-            # List of stats to show in the variance table
-            v_stats = ['SCR', 'PAS', 'HDL', 'DEF', 'IQ', 'FG_RA', 'FG_ATB']
+# --- COMPREHENSIVE SCOUTING VARIANCE ---
+        with st.expander("🔍 View Scouting Variance (High/Low)", expanded=False):
+            st.write("Comparing the average against the individual scout extremes across all categories.")
+            
+            # The full arsenal of ratings
+            v_stats = [
+                'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 
+                'DIS', 'IQ', 'DRFL', 'FG_RA', 'FG_ITP', 'FG_MID', 
+                'FG_COR', 'FG_ATB', 'FT'
+            ]
+            
             variance_list = []
             
             for s in v_stats:
                 if s in p_data:
-                    # Fallback to the main value if min/max doesn't exist (e.g., only 1 report)
+                    # Robust lookup for min/max
                     low_val = p_data.get(f"{s}_min", p_data[s])
                     high_val = p_data.get(f"{s}_max", p_data[s])
                     
@@ -329,6 +338,7 @@ with tab1:
                         "High": int(high_val),
                     })
             
+            # Displaying as a full table
             st.table(pd.DataFrame(variance_list).set_index('Attribute'))
             
     # Scouting Intelligence (Ranking Logic)
@@ -753,6 +763,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
