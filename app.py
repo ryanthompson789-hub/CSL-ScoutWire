@@ -378,33 +378,33 @@ with tab1:
         st.plotly_chart(fig_shoot, use_container_width=True)
 
 # --- SCOUTING VARIANCE (Full Width & Expandable) ---
-        # Ensure this is NOT indented under col1 or col2
-        st.divider() 
+    # Ensure this is NOT indented under col1 or col2
+    st.divider() 
         
-        with st.expander("📊 View Detailed Scouting Variance (High/Low)", expanded=False):
-            st.write("consensus (Average) vs. scouting extremes (Low/High) for all attributes.")
+    with st.expander("📊 View Detailed Scouting Variance (High/Low)", expanded=False):
+        st.write("consensus (Average) vs. scouting extremes (Low/High) for all attributes.")
 
-            v_stats = [
-                'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 
-                'DIS', 'IQ', 'DRFL', 'FG_RA', 'FG_ITP', 'FG_MID', 
-                'FG_COR', 'FG_ATB', 'FT'
-            ]
+        v_stats = [
+            'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 
+            'DIS', 'IQ', 'DRFL', 'FG_RA', 'FG_ITP', 'FG_MID', 
+            'FG_COR', 'FG_ATB', 'FT'
+        ]
             
-            variance_list = []
-            for s in v_stats:
-                if s in p_data:
-                    low_val = p_data.get(f"{s}_min", p_data[s])
-                    high_val = p_data.get(f"{s}_max", p_data[s])
+        variance_list = []
+        for s in v_stats:
+            if s in p_data:
+                low_val = p_data.get(f"{s}_min", p_data[s])
+                high_val = p_data.get(f"{s}_max", p_data[s])
                     
-                    variance_list.append({
-                        "Attribute": s,
-                        "Low": int(low_val),
-                        "AVERAGE": round(p_data[s], 1),
-                        "High": int(high_val),
-                    })
+                variance_list.append({
+                    "Attribute": s,
+                    "Low": int(low_val),
+                    "AVERAGE": round(p_data[s], 1),
+                    "High": int(high_val),
+                })
 
-            df_variance = pd.DataFrame(variance_list).set_index('Attribute')
-            st.table(df_variance) # Using st.table here for a clean, non-scrollable look
+        df_variance = pd.DataFrame(variance_list).set_index('Attribute')
+        st.table(df_variance) # Using st.table here for a clean, non-scrollable look
         
     # --- BOTTOM UI: HABITS ---
     st.divider()
@@ -759,6 +759,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
