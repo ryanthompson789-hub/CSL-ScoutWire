@@ -391,23 +391,22 @@ with tab1:
     st.divider() 
         
 # 1. CURRENT RATINGS VARIANCE
-    with st.expander("📊 View Current Rating Variance (Convergent Range)", expanded=False):
+    with st.expander("📊 View Current Rating Variance (Scouted Range)", expanded=False):
         current_list = []
         for s in core_stats:
             if s in p_data:
-                # Deviation Rule: 2 for shooting/fouls, 5 for core
                 dev = 2 if s in ['FG_RA', 'FG_ITP', 'FG_MID', 'FT', 'FG_ATB', 'FG_COR', 'DRFL', 'RA_RATE', 'DUNK_RATE'] else 5
                     
                 raw_low = p_data.get(f"{s}_min", p_data[s])
                 raw_high = p_data.get(f"{s}_max", p_data[s])
                     
-                # NARROW THE RANGE: Pull floor up, pull ceiling down
-                true_low = int(raw_low + dev)
-                true_high = int(raw_high - dev)
+                    # INVERSE OFFSET: Floor is High - Dev | Ceiling is Low + Dev
+                true_low = int(raw_high - dev)
+                true_high = int(raw_low + dev)
                     
-                # Safety check: ensure low isn't higher than high if data is tight
+                    # Safety: If scouts are perfectly aligned, just show that number
                 if true_low > true_high:
-                    true_low, true_high = int(round(p_data[s], 0)), int(round(p_data[s], 0))
+                    true_low = true_high = int(round(p_data[s], 0))
 
                 current_list.append({
                     "Attribute": s,
@@ -419,24 +418,23 @@ with tab1:
         st.table(pd.DataFrame(current_list).set_index('Attribute'))
 
         # 2. POTENTIAL RATINGS VARIANCE
-    with st.expander("🚀 View Potential Rating Variance (Convergent Range)", expanded=False):
+    with st.expander("🚀 View Potential Rating Variance (Scouted Range)", expanded=False):
         potential_list = []
         for s in core_stats:
             pot_col = f"{s}_POT" 
             if pot_col in p_data:
-                # Deviation Rule: 2 for shooting/fouls, 15 for core potential
                 dev = 2 if s in ['FG_RA', 'FG_ITP', 'FG_MID', 'FT', 'FG_ATB', 'FG_COR', 'DRFL', 'RA_RATE', 'DUNK_RATE'] else 15
                     
                 raw_low = p_data.get(f"{pot_col}_min", p_data[pot_col])
                 raw_high = p_data.get(f"{pot_col}_max", p_data[pot_col])
                     
-                # NARROW THE RANGE: (Low + 15) to (High - 15)
-                true_low = int(raw_low + dev)
-                true_high = int(raw_high - dev)
+                    # INVERSE OFFSET: Floor is High - 15 | Ceiling is Low + 15
+                true_low = int(raw_high - dev)
+                true_high = int(raw_low + dev)
                     
-                # Safety check
+                    # Safety: If true_low is higher than true_high, it means 
+                    # the scouts are already closer than the deviation allows.
                 if true_low > true_high:
-                        # If range is smaller than deviation, use the average as a fixed point
                     true_low = true_high = int(round(p_data[pot_col], 0))
 
                 potential_list.append({
