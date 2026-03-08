@@ -104,11 +104,36 @@ try:
     existing_bio = [col for col in bio_cols if col in df.columns]
     if year_col in df.columns: existing_bio.append(year_col)
 
-    player_stats = df.groupby('Full_Name').agg({
-        **{stat: 'mean' for stat in existing_numeric},
-        **{bio: 'first' for bio in existing_bio}
-    }).reset_index()
+# 1. Define how to aggregate each column
+    # For stats, we want mean, min, and max
+    stats_agg = {stat: ['mean', 'min', 'max'] for stat in existing_numeric}
+    # For bio info, we just want the first entry (since Name/Team shouldn't change)
+    bio_agg = {bio: 'first' for bio in existing_bio}
     
+    # Combine them and add the "Count" feature
+    full_agg = {**stats_agg, **bio_agg}
+    full_agg['Full_Name'] = 'count'
+
+    # 2. Run the GroupBy
+    player_stats = df.groupby('Full_Name').agg(full_agg)
+
+    # 3. Flatten the column names (so 'SCR' 'mean' becomes 'SCR')
+    # We keep 'mean' as the primary name so your existing charts don't break
+    new_cols = []
+    for col, stat in player_stats.columns:
+        if stat == 'mean':
+            new_cols.append(col)
+        elif stat in ['min', 'max']:
+            new_cols.append(f"{col}_{stat}")
+        elif col == 'Full_Name' and stat == 'count':
+            new_cols.append('Reports_Count')
+        else:
+            new_cols.append(col)
+    
+    player_stats.columns = new_cols
+    player_stats = player_stats.reset_index()
+
+    # 4. Standard Clean-up & Calculations
     if year_col in player_stats.columns:
         player_stats[year_col] = player_stats[year_col].astype(str).str.replace('.0', '', regex=False)
     
@@ -267,6 +292,38 @@ with tab1:
     with st.expander("📝 Scouting Director's Executive Summary", expanded=True):
         st.write(generate_scout_report(p_data, filtered_stats))
 
+# --- NEW: SCOUTING VARIANCE & METRICS ---
+        st.divider()
+        col_m1, col_m2, col_m3 = st.columns(3)
+        with col_m1:
+            st.metric("Scout Reports", f"{p_data['Reports_Count']}")
+        with col_m2:
+            # Show the spread of their overall potential
+            pot_range = f"{int(p_data['Overall_Pot_min'])} - {int(p_data['Overall_Pot_max'])}"
+            st.metric("Ceiling Range", pot_range)
+        with col_m3:
+            # Show the spread of their current floor
+            cur_range = f"{int(p_data['Current_Rating_min'])} - {int(p_data['Current_Rating_max'])}"
+            st.metric("Floor Range", cur_range)
+
+        with st.expander("🔍 View Detailed Rating Variance", expanded=False):
+            st.write("Average ratings shown with the [Lowest - Highest] range from individual scouts.")
+            
+            # Key stats to show in the variance table
+            v_stats = ['SCR', 'PAS', 'HDL', 'DEF', 'IQ', 'FG_RA', 'FG_ATB']
+            variance_list = []
+            
+            for s in v_stats:
+                if s in p_data:
+                    variance_list.append({
+                        "Attribute": s,
+                        "Low": int(p_data.get(f"{s}_min", p_data[s])),
+                        "AVERAGE": round(p_data[s], 1),
+                        "High": int(p_data.get(f"{s}_max", p_data[s])),
+                    })
+            
+            st.table(pd.DataFrame(variance_list).set_index('Attribute'))
+            
     # Scouting Intelligence (Ranking Logic)
     pos_peers = filtered_stats[filtered_stats['Pos'] == p_data['Pos']].copy()
     total_in_pos = len(pos_peers)
@@ -689,6 +746,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
