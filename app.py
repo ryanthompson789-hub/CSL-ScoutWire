@@ -403,12 +403,12 @@ with tab1:
         st.table(pd.DataFrame(current_list).set_index('Attribute'))
 
         # 2. POTENTIAL RATINGS VARIANCE
-        # Note: This assumes your potential columns end in '_Pot' or similar
+        # Note: This assumes your potential columns end in '_POT' or similar
     with st.expander("🚀 View Potential Rating Variance (High/Low)", expanded=False):
         potential_list = []
         for s in core_stats:
                 # We look for the Potential version of each stat (e.g., SCR_Pot)
-            pot_col = f"{s}_Pot" 
+            pot_col = f"{s}_POT" 
             if pot_col in p_data:
                 low_val = p_data.get(f"{pot_col}_min", p_data[pot_col])
                 high_val = p_data.get(f"{pot_col}_max", p_data[pot_col])
@@ -777,6 +777,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
