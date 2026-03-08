@@ -388,7 +388,7 @@ with tab1:
     ]
 
        # --- SCOUTING VARIANCE (Full Width & Dual Expanders) ---
-        st.divider() 
+    st.divider() 
         
         # 1. CURRENT RATINGS VARIANCE
         with st.expander("📊 View Current Rating Variance (Scouted Range)", expanded=False):
@@ -792,6 +792,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
