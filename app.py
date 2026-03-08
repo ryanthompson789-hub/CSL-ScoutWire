@@ -307,39 +307,6 @@ with tab1:
         
         # Only show the Report Count as a main metric
         st.metric("Total Scout Reports", f"{p_data['Reports_Count']}")
-
-        # Keep the detailed variance tucked away for power users
-        with st.expander("🔍 View Scouting Variance (High/Low)", expanded=False):
-            st.write("Comparing the average against the individual scout extremes.")
-            
-# --- COMPREHENSIVE SCOUTING VARIANCE ---
-        with st.expander("🔍 View Scouting Variance (High/Low)", expanded=False):
-            st.write("Comparing the average against the individual scout extremes across all categories.")
-            
-            # The full arsenal of ratings
-            v_stats = [
-                'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 
-                'DIS', 'IQ', 'DRFL', 'FG_RA', 'FG_ITP', 'FG_MID', 
-                'FG_COR', 'FG_ATB', 'FT'
-            ]
-            
-            variance_list = []
-            
-            for s in v_stats:
-                if s in p_data:
-                    # Robust lookup for min/max
-                    low_val = p_data.get(f"{s}_min", p_data[s])
-                    high_val = p_data.get(f"{s}_max", p_data[s])
-                    
-                    variance_list.append({
-                        "Attribute": s,
-                        "Low": int(low_val),
-                        "AVERAGE": round(p_data[s], 1),
-                        "High": int(high_val),
-                    })
-            
-            # Displaying as a full table
-            st.table(pd.DataFrame(variance_list).set_index('Attribute'))
             
     # Scouting Intelligence (Ranking Logic)
     pos_peers = filtered_stats[filtered_stats['Pos'] == p_data['Pos']].copy()
@@ -763,6 +730,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
