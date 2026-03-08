@@ -377,34 +377,52 @@ with tab1:
         fig_shoot.update_layout(title="Shooting Development", barmode='overlay', yaxis=dict(range=[0, 100]), height=350, margin=dict(l=20,r=20,t=40,b=20))
         st.plotly_chart(fig_shoot, use_container_width=True)
 
-# --- SCOUTING VARIANCE (Full Width & Expandable) ---
-    # Ensure this is NOT indented under col1 or col2
+# --- SCOUTING VARIANCE (Full Width & Dual Expanders) ---
     st.divider() 
         
-    with st.expander("📊 View Detailed Scouting Variance (High/Low)", expanded=False):
-        st.write("consensus (Average) vs. scouting extremes (Low/High) for all attributes.")
+        # Define the lists for both categories
+    core_stats = [
+        'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 
+        'DIS', 'IQ', 'DRFL', 'FG_RA', 'FG_ITP', 'FG_MID', 
+        'FG_COR', 'FG_ATB', 'FT'
+    ]
 
-        v_stats = [
-            'SCR', 'PAS', 'HDL', 'ORB', 'DRB', 'BLK', 'STL', 'DEF', 
-            'DIS', 'IQ', 'DRFL', 'FG_RA', 'FG_ITP', 'FG_MID', 
-            'FG_COR', 'FG_ATB', 'FT'
-        ]
-            
-        variance_list = []
-        for s in v_stats:
+        # 1. CURRENT RATINGS VARIANCE
+    with st.expander("📊 View Current Rating Variance (High/Low)", expanded=False):
+        current_list = []
+        for s in core_stats:
             if s in p_data:
                 low_val = p_data.get(f"{s}_min", p_data[s])
                 high_val = p_data.get(f"{s}_max", p_data[s])
-                    
-                variance_list.append({
+                current_list.append({
                     "Attribute": s,
                     "Low": int(low_val),
-                    "AVERAGE": int(round(p_data[s], 0)), # Rounds to nearest whole number
+                    "AVERAGE": int(round(p_data[s], 0)),
                     "High": int(high_val),
                 })
+        st.table(pd.DataFrame(current_list).set_index('Attribute'))
 
-        df_variance = pd.DataFrame(variance_list).set_index('Attribute')
-        st.table(df_variance)
+        # 2. POTENTIAL RATINGS VARIANCE
+        # Note: This assumes your potential columns end in '_Pot' or similar
+    with st.expander("🚀 View Potential Rating Variance (High/Low)", expanded=False):
+        potential_list = []
+        for s in core_stats:
+                # We look for the Potential version of each stat (e.g., SCR_Pot)
+            pot_col = f"{s}_Pot" 
+            if pot_col in p_data:
+                low_val = p_data.get(f"{pot_col}_min", p_data[pot_col])
+                high_val = p_data.get(f"{pot_col}_max", p_data[pot_col])
+                potential_list.append({
+                    "Attribute": s,
+                    "Low": int(low_val),
+                    "AVERAGE": int(round(p_data[pot_col], 0)),
+                    "High": int(high_val),
+                })
+            
+        if potential_list:
+            st.table(pd.DataFrame(potential_list).set_index('Attribute'))
+        else:
+            st.info("No specific potential variance data found for this prospect.")
         
     # --- BOTTOM UI: HABITS ---
     st.divider()
@@ -759,6 +777,7 @@ with tab4:
     st.plotly_chart(fig_risk, use_container_width=True)
     
     st.info(f"💡 **How to read this:** Players in the **Top-Left** have lower current ratings but huge room to grow. Players in the **Bottom-Left** have lower readiness and low growth. Players in the **Top-Right** are elite prospects who are already good but still have high ceilings. Players in the **Bottom-Right** are more ready to contribute now but have less growth potential.")
+
 
 
 
